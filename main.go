@@ -5,6 +5,6 @@ import (
 	"github.com/mkawserm/abesh/constant"
 )
 
-func main()  {
-	fmt.Println(constant.CacheStore)
+func main() {
+	fmt.Println(constant.CategoryCacheStore)
 }

@@ -2,15 +2,15 @@ package constant
 
 type Category string
 
-const Storage Category = "storage"
-const General Category = "general"
-const Network Category = "network"
-const KVStore Category = "kvstore"
-const Trigger Category = "trigger"
-const Service Category = "service"
-const SQLStore Category = "sqlstore"
-const Database Category = "database"
-const CacheStore Category = "cachestore"
+const CategoryStorage Category = "storage"
+const CategoryGeneral Category = "general"
+const CategoryNetwork Category = "network"
+const CategoryKVStore Category = "kvstore"
+const CategoryTrigger Category = "trigger"
+const CategoryService Category = "service"
+const CategorySQLStore Category = "sqlstore"
+const CategoryDatabase Category = "database"
+const CategoryCacheStore Category = "cachestore"
 
 // CategoryString returns category name
 func CategoryString(category Category) string {

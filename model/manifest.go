@@ -7,17 +7,16 @@ type AuthorizationManifest struct {
 }
 
 type TriggerManifest struct {
-	ContractId string `yaml:"contract_id" json:"contract_id"`
-	Key        string `yaml:"key" json:"key"`
-	Value      string `yaml:"value" json:"value"`
+	ContractId    string            `yaml:"contract_id" json:"contract_id"`
+	TriggerValues map[string]string `yaml:"trigger_values" json:"trigger_values"`
 }
 
 type CapabilityManifest struct {
-	ContractId string                 `yaml:"contract_id" json:"contract_id"`
-	Source     string                 `yaml:"source" json:"source"`
-	Runtime    string                 `yaml:"runtime" json:"runtime"` // native or wasm
-	Category   string                 `yaml:"category" json:"category"`
-	Values     map[string]interface{} `yaml:"values" json:"values"`
+	ContractId string            `yaml:"contract_id" json:"contract_id"`
+	Source     string            `yaml:"source" json:"source"`
+	Runtime    string            `yaml:"runtime" json:"runtime"` // native or wasm
+	Category   string            `yaml:"category" json:"category"`
+	Values     map[string]string `yaml:"values" json:"values"`
 }
 
 type ServiceManifest struct {
@@ -25,7 +24,7 @@ type ServiceManifest struct {
 	Source        string                 `yaml:"source" json:"source"`
 	Runtime       string                 `yaml:"runtime" json:"runtime"` // native or wasm
 	Authorization *AuthorizationManifest `yaml:"authorization" json:"authorization"`
-	Values        map[string]interface{} `yaml:"values" json:"values"`
+	Values        map[string]string      `yaml:"values" json:"values"`
 	Triggers      []*TriggerManifest     `yaml:"triggers" json:"triggers"`
 	Capabilities  []*CapabilityManifest  `yaml:"capabilities" json:"capabilities"`
 }

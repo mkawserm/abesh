@@ -5,7 +5,13 @@ type ICapability interface {
 	Runtime() string
 	Category() string
 	ContractId() string
-	Values() map[string]interface{}
+	Values() map[string]string
 
-	SetValues(map[string]interface{})
+	SetValues(map[string]string) error
+	//SetCapabilityRegistry(capabilityRegistry ICapabilityRegistry) error
+
+	Setup() error
+
+	Start() error
+	Stop() error
 }
