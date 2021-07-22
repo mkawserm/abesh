@@ -1,3 +1,8 @@
+VERSION = "0.0.1"
+change-version:
+	@echo $(VERSION)>VERSION
+	@echo "package constant\n\n//Version constant of abesh\nconst Version = \"$(VERSION)\"">constant/version.go
+
 update-module:
 	go get -v github.com/spf13/cobra
 	go get -v go.uber.org/zap
