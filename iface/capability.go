@@ -8,10 +8,4 @@ type ICapability interface {
 	Values() map[string]string
 
 	SetValues(map[string]string) error
-	//SetCapabilityRegistry(capabilityRegistry ICapabilityRegistry) error
-
-	Setup() error
-
-	Start() error
-	Stop() error
 }

@@ -86,7 +86,7 @@ func (h *HTTPServer) Stop() error {
 	return nil
 }
 
-func (h *HTTPServer) AddTrigger(triggerValues map[string]string, service iface.IService) error {
+func (h *HTTPServer) AddService(triggerValues map[string]string, service iface.IService) error {
 	var method string
 	var path string
 	var ok bool
