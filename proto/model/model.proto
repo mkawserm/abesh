@@ -1,0 +1,22 @@
+syntax = "proto3";
+package model;
+option go_package = "github.com/mkawserm/abesh/model;model";
+
+import "google/protobuf/any.proto";
+
+message Metadata {
+  string path = 1;
+  string method = 2;
+  string query_string = 3;
+  map<string,string> headers = 4;
+
+  uint32 status_code = 5;
+  string status = 6;
+
+  google.protobuf.Any data = 501;
+}
+
+message Event {
+  Metadata metadata = 1;
+  bytes data = 2;
+}

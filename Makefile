@@ -8,6 +8,15 @@ update-module:
 	go get -v go.uber.org/zap
 	go get -v github.com/caarlos0/env
 	go get -v gopkg.in/yaml.v2
+	go get -v google.golang.org/protobuf/proto
+
+protoc:
+	@protoc \
+		-I=./proto \
+			--go_opt=module=github.com/mkawserm/abesh \
+			--go_out=. \
+			./proto/model/model.proto
+
 
 run:
 	go run main.go
