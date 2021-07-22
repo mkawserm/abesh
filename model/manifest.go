@@ -1,7 +1,8 @@
 package model
 
 type AuthorizationManifest struct {
-	Expression string `yaml:"expression" json:"expression"`
+	Operator       string   `yaml:"operator" json:"operator"`
+	ExpressionList []string `yaml:"expression_list" json:"expression_list"`
 }
 
 type TriggerManifest struct {
