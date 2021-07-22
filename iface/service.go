@@ -9,5 +9,5 @@ type IService interface {
 	ICapability
 	Process(ctx context.Context,
 		capabilityRegistry ICapabilityRegistry,
-		event *model.Event) *model.Event
+		event *model.Event) (*model.Event, error)
 }
