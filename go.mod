@@ -1,1 +1,1 @@
-module "abesh"
+module "github.com/mkawserm/abesh"
