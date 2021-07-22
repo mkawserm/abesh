@@ -1,5 +1,6 @@
 package iface
 
-type Trigger interface {
-	Capability
+type ITrigger interface {
+	ICapability
+	AddTrigger(key string, value string, service IService) bool
 }

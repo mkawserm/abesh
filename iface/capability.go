@@ -1,6 +1,6 @@
 package iface
 
-type Capability interface {
+type ICapability interface {
 	Source() string
 	Runtime() string
 	Category() string
