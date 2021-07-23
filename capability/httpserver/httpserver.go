@@ -7,6 +7,7 @@ import (
 	"github.com/mkawserm/abesh/iface"
 	"github.com/mkawserm/abesh/logger"
 	"github.com/mkawserm/abesh/model"
+	"github.com/mkawserm/abesh/registry"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
@@ -61,6 +62,10 @@ func (h *HTTPServer) SetValues(values map[string]string) error {
 	}
 
 	return nil
+}
+
+func (h *HTTPServer) New() iface.ICapability {
+	return &HTTPServer{}
 }
 
 func (h *HTTPServer) Setup() error {
@@ -153,4 +158,8 @@ func (h *HTTPServer) AddService(triggerValues map[string]string, service iface.I
 	})
 
 	return nil
+}
+
+func init() {
+	registry.GlobalRegistry().AddCapability(&HTTPServer{})
 }

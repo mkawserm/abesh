@@ -8,4 +8,6 @@ type ICapability interface {
 	Values() map[string]string
 
 	SetValues(map[string]string) error
+
+	New() ICapability
 }
