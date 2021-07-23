@@ -1,6 +1,6 @@
 package iface
 
 type ICapabilityRegistry interface {
-	KVStore(contactId string) IKVStore
+	KVStore(contractId string) IKVStore
 	Interface(contractId string) interface{}
 }
