@@ -30,6 +30,10 @@ func (h *HTTPServer) Name() string {
 	return "golang_net_http_server"
 }
 
+func (h *HTTPServer) Version() string {
+	return "0.0.1"
+}
+
 func (h *HTTPServer) Source() string {
 	return "github.com/mkawserm/abesh/capability/httpserver"
 }

@@ -8,12 +8,14 @@ type AuthorizationManifest struct {
 
 type TriggerManifest struct {
 	Name          string            `yaml:"name" json:"name"`
+	Version       string            `yaml:"version" json:"version"`
 	ContractId    string            `yaml:"contract_id" json:"contract_id"`
 	TriggerValues map[string]string `yaml:"trigger_values" json:"trigger_values"`
 }
 
 type CapabilityManifest struct {
 	Name       string            `yaml:"name" json:"name"`
+	Version    string            `yaml:"version" json:"version"`
 	ContractId string            `yaml:"contract_id" json:"contract_id"`
 	Source     string            `yaml:"source" json:"source"`
 	Runtime    string            `yaml:"runtime" json:"runtime"` // native or wasm
@@ -23,6 +25,7 @@ type CapabilityManifest struct {
 
 type ServiceManifest struct {
 	Name          string                 `yaml:"name" json:"name"`
+	Version       string                 `yaml:"version" json:"version"`
 	ContractId    string                 `yaml:"contract_id" json:"contract_id"`
 	Source        string                 `yaml:"source" json:"source"`
 	Runtime       string                 `yaml:"runtime" json:"runtime"` // native or wasm
