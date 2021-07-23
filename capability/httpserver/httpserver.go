@@ -136,7 +136,11 @@ func (h *HTTPServer) AddService(triggerValues map[string]string, service iface.I
 		}
 
 		if data, err = ioutil.ReadAll(request.Body); err != nil {
-			logger.S(constant.Name).Error(err.Error(), zap.String("contract_id", h.ContractId()))
+			logger.S(constant.Name).Error(err.Error(),
+				zap.String("version", h.Version()),
+				zap.String("name", h.Name()),
+				zap.String("contract_id", h.ContractId()))
+
 			writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -161,7 +165,10 @@ func (h *HTTPServer) AddService(triggerValues map[string]string, service iface.I
 		}
 
 		if _, err = writer.Write(outputEvent.Data); err != nil {
-			logger.S(constant.Name).Error(err.Error(), zap.String("contract_id", h.ContractId()))
+			logger.S(constant.Name).Error(err.Error(),
+				zap.String("version", h.Version()),
+				zap.String("name", h.Name()),
+				zap.String("contract_id", h.ContractId()))
 		}
 	})
 
