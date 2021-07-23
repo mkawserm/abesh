@@ -19,7 +19,7 @@ protoc:
 
 
 run:
-	go run main/main.go
+	go run main/main.go run --manifest example/manifest.yaml
 
 build:
 	go build -o bin/abesh main/main.go
