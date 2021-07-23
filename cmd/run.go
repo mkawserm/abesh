@@ -27,7 +27,17 @@ var runCMD = &cobra.Command{
 		//	fmt.Printf("%+v\n", manifest)
 		//}
 
-		DefaultPlatform.Run(manifest)
+		err = DefaultPlatform.Setup(manifest)
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+
+		err = DefaultPlatform.Run()
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
 	},
 }
 
