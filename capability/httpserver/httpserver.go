@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 )
 
 var ErrPathNotDefined = errors.New("path not defined")
@@ -129,6 +130,7 @@ func (h *HTTPServer) AddService(capabilityRegistry iface.ICapabilityRegistry,
 	path = strings.TrimSpace(path)
 
 	h.mHttpServerMux.HandleFunc(path, func(writer http.ResponseWriter, request *http.Request) {
+		timerStart := time.Now()
 		logger.L(h.ContractId()).Debug("request stated")
 		logger.L(h.ContractId()).Debug("request data",
 			zap.String("path", request.URL.Path),
@@ -198,6 +200,9 @@ func (h *HTTPServer) AddService(capabilityRegistry iface.ICapabilityRegistry,
 		}
 
 		logger.L(h.ContractId()).Debug("request completed")
+
+		elapsed := time.Since(timerStart)
+		logger.L(constant.Name).Debug("request execution time", zap.Duration("seconds", elapsed))
 	})
 
 	return nil

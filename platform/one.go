@@ -129,6 +129,7 @@ func (o *One) SetupServices(manifest *model.Manifest) error {
 }
 
 func (o *One) Setup(manifest *model.Manifest) error {
+	timerStart := time.Now()
 	var err error
 	o.triggers = make(map[string]iface.ITrigger)
 	o.capabilityRegistry = registry.NewCapabilityRegistry()
@@ -143,10 +144,14 @@ func (o *One) Setup(manifest *model.Manifest) error {
 		return err
 	}
 
+	elapsed := time.Since(timerStart)
+	logger.L(constant.Name).Info("setup execution time", zap.Duration("seconds", elapsed))
 	return nil
 }
 
 func (o *One) Run() {
+	timerStart := time.Now()
+
 	idleChan := make(chan struct{})
 
 	go func() {
@@ -188,6 +193,9 @@ func (o *One) Run() {
 	}
 
 	logger.L(constant.Name).Info("all triggers are executed")
+	elapsed := time.Since(timerStart)
+
+	logger.L(constant.Name).Info("run execution time", zap.Duration("seconds", elapsed))
 	// Blocking until the shutdown is complete
 	<-idleChan
 
