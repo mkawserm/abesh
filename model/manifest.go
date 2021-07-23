@@ -32,10 +32,10 @@ type ServiceManifest struct {
 	Authorization *AuthorizationManifest `yaml:"authorization" json:"authorization"`
 	Values        map[string]string      `yaml:"values" json:"values"`
 	Triggers      []*TriggerManifest     `yaml:"triggers" json:"triggers"`
-	Capabilities  []*CapabilityManifest  `yaml:"capabilities" json:"capabilities"`
 }
 
 type Manifest struct {
-	Version  string             `yaml:"version" json:"version"` // 1
-	Services []*ServiceManifest `yaml:"services" json:"services"`
+	Version      string                `yaml:"version" json:"version"` // 1
+	Capabilities []*CapabilityManifest `yaml:"capabilities" json:"capabilities"`
+	Services     []*ServiceManifest    `yaml:"services" json:"services"`
 }
