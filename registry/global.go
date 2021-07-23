@@ -22,6 +22,10 @@ func (g *globalRegistry) AddCapability(capability iface.ICapability) {
 	g.mCapability[capability.ContractId()] = capability
 }
 
+func (g *globalRegistry) GetCapability(contractId string) iface.ICapability {
+	return g.mCapability[contractId]
+}
+
 func (g *globalRegistry) CapabilityIterator() map[string]iface.ICapability {
 	return g.mCapability
 }

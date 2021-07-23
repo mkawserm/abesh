@@ -10,7 +10,6 @@ import (
 	"os"
 )
 
-
 var rootCMD = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		_ = cmd.Help()
@@ -26,24 +25,23 @@ func init() {
 }
 
 // AddCommand slices to root cmd
-func AddCommand(cmdList ... *cobra.Command)  {
+func AddCommand(cmdList ...*cobra.Command) {
 	rootCMD.AddCommand(cmdList...)
 }
 
-
 func initConfig() {
 	if conf.EnvironmentConfigIns().CMDLogEnabled {
-		logger.S(constant.Name).Debug("initializing config")
+		logger.L(constant.Name).Debug("initializing config")
 	}
 
 	registry.GlobalRegistry()
 
 	if conf.EnvironmentConfigIns().CMDLogEnabled {
-		logger.S(constant.Name).Debug("global registry initialized")
+		logger.L(constant.Name).Debug("global registry initialized")
 	}
 }
 
-func Execute()  {
+func Execute() {
 	if err := rootCMD.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

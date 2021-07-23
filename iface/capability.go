@@ -10,6 +10,7 @@ type ICapability interface {
 	ContractId() string
 	Values() map[string]string
 
+	Setup() error
 	SetValues(map[string]string) error
 
 	New() ICapability

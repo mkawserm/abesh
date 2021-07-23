@@ -99,7 +99,10 @@ func (h *HTTPServer) Stop() error {
 	return nil
 }
 
-func (h *HTTPServer) AddService(triggerValues map[string]string, service iface.IService) error {
+func (h *HTTPServer) AddService(capabilityRegistry iface.ICapabilityRegistry,
+	triggerValues map[string]string,
+	service iface.IService) error {
+
 	var method string
 	var path string
 	var ok bool
@@ -152,7 +155,7 @@ func (h *HTTPServer) AddService(triggerValues map[string]string, service iface.I
 
 		var outputEvent *model.Event
 
-		outputEvent, err = service.Process(request.Context(), nil, inputEvent)
+		outputEvent, err = service.Process(request.Context(), capabilityRegistry, inputEvent)
 		if err != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
 			return

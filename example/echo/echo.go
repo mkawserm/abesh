@@ -40,6 +40,10 @@ func (e *Echo) Values() map[string]string {
 	return e.mValues
 }
 
+func (e *Echo) Setup() error {
+	return nil
+}
+
 func (e *Echo) SetValues(values map[string]string) error {
 	e.mValues = values
 
