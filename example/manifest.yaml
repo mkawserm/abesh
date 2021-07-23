@@ -1,22 +1,13 @@
 version: "1"
 
 capabilities:
-  - name: "golang_net_http_server"
-    version: "0.0.1"
-    contract_id: "abesh:httpserver"
-    source: "github.com/mkawserm/abesh/capability/httpserver"
-    runtime: "native"
-    category: "trigger"
+  - contract_id: "abesh:httpserver"
     values:
       host: "0.0.0.0"
       port: "9090"
 
 services:
-  - name: "ex_echo"
-    version: "0.0.1"
-    contract_id: "abesh:ex_echo"
-    source: "github.com/mkawserm/abesh/example/echo"
-    runtime: "native"
+  - contract_id: "abesh:ex_echo"
     authorization:
       immutable: false
       operator: "AND"
@@ -27,16 +18,12 @@ services:
       key2: "test2"
 
     triggers:
-      - name: "golang_net_http_server"
-        version: "0.0.1"
-        contract_id: "abesh:httpserver"
+      - contract_id: "abesh:httpserver"
         trigger_values:
           method: "GET"
           path: "/default"
 
-      - name: "golang_net_http_server"
-        version: "0.0.1"
-        contract_id: "abesh:httpserver"
+      - contract_id: "abesh:httpserver"
         trigger_values:
           method: "GET"
           path: "/echo"
