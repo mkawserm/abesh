@@ -20,3 +20,6 @@ protoc:
 
 run:
 	go run main/main.go
+
+build:
+	go build -o bin/abesh main/main.go
