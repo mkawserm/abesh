@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"context"
 	"errors"
 	"github.com/mkawserm/abesh/constant"
 	"github.com/mkawserm/abesh/iface"
@@ -8,6 +9,10 @@ import (
 	"github.com/mkawserm/abesh/model"
 	"github.com/mkawserm/abesh/registry"
 	"go.uber.org/zap"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 var ErrCapabilityNotFound = errors.New("capability is not found in the global registry")
@@ -38,12 +43,12 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 			newCapability := capability.New()
 			newCapabilityTrigger := newCapability.(iface.ITrigger)
 
-			err = newCapabilityTrigger.Setup()
+			err = newCapabilityTrigger.SetValues(v.Values)
 			if err != nil {
 				return err
 			}
 
-			err = newCapabilityTrigger.SetValues(v.Values)
+			err = newCapabilityTrigger.Setup()
 			if err != nil {
 				return err
 			}
@@ -104,12 +109,12 @@ func (o *One) SetupServices(manifest *model.Manifest) error {
 			return ErrCapabilityCategoryIsNotService
 		}
 
-		err = service.Setup()
+		err = service.SetValues(s.Values)
 		if err != nil {
 			return err
 		}
 
-		err = service.SetValues(s.Values)
+		err = service.Setup()
 		if err != nil {
 			return err
 		}
@@ -141,7 +146,50 @@ func (o *One) Setup(manifest *model.Manifest) error {
 	return nil
 }
 
-func (o *One) Run() error {
+func (o *One) Run() {
+	idleChan := make(chan struct{})
 
-	return nil
+	go func() {
+		signChan := make(chan os.Signal, 1)
+		signal.Notify(signChan, os.Interrupt, syscall.SIGTERM)
+		sig := <-signChan
+		logger.L(constant.Name).Info("shutdown signal received",
+			zap.String("signal", sig.String()))
+
+		logger.L(constant.Name).Info("preparing from shutdown")
+		logger.L(constant.Name).Info("closing all triggers")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		for _, t := range o.triggers {
+			err := t.Stop(ctx)
+			if err != nil {
+				logger.L(constant.Name).Error(err.Error())
+			}
+		}
+
+		logger.L(constant.Name).Info("closed all triggers")
+
+		// Actual shutdown trigger.
+		close(idleChan)
+	}()
+
+	for _, t := range o.triggers {
+		trigger := t
+
+		// start all triggers
+		go func() {
+			err := trigger.Start(context.TODO())
+			if err != nil {
+				logger.L(constant.Name).Error(err.Error())
+			}
+		}()
+	}
+
+	logger.L(constant.Name).Info("all triggers are executed")
+	// Blocking until the shutdown is complete
+	<-idleChan
+
+	logger.L(constant.Name).Info("shutdown complete")
 }

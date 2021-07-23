@@ -7,7 +7,7 @@ import "google/protobuf/any.proto";
 message Metadata {
   string path = 1;
   string method = 2;
-  string query_string = 3;
+  map<string,string> query = 3;
 
   // attach it to response
   // important for http trigger

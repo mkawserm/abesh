@@ -12,18 +12,18 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 )
 
 var ErrPathNotDefined = errors.New("path not defined")
 var ErrMethodNotDefined = errors.New("method not defined")
 
 type HTTPServer struct {
-	mHost          string
-	mPort          string
-	mValues        map[string]string
-	mHttpServerMux *http.ServeMux
+	mHost   string
+	mPort   string
+	mValues map[string]string
+
 	mHttpServer    *http.Server
+	mHttpServerMux *http.ServeMux
 }
 
 func (h *HTTPServer) Name() string {
@@ -77,22 +77,31 @@ func (h *HTTPServer) New() iface.ICapability {
 }
 
 func (h *HTTPServer) Setup() error {
-	h.mHttpServerMux = new(http.ServeMux)
 	h.mHttpServer = new(http.Server)
-	return nil
-}
+	h.mHttpServerMux = new(http.ServeMux)
 
-func (h *HTTPServer) Start() error {
-	h.mHttpServer.Addr = h.mHost + ":" + h.mPort
+	// setup server details
 	h.mHttpServer.Handler = h.mHttpServerMux
+	h.mHttpServer.Addr = h.mHost + ":" + h.mPort
+
+	logger.L(constant.Name).Info("http server setup complete",
+		zap.String("host", h.mHost),
+		zap.String("port", h.mPort))
 
 	return nil
 }
 
-func (h *HTTPServer) Stop() error {
+func (h *HTTPServer) Start(_ context.Context) error {
+	logger.L(constant.Name).Info("http server started at " + h.mHttpServer.Addr)
+	if err := h.mHttpServer.ListenAndServe(); err != http.ErrServerClosed {
+		return err
+	}
+
+	return nil
+}
+
+func (h *HTTPServer) Stop(ctx context.Context) error {
 	if h.mHttpServer != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
 		return h.mHttpServer.Shutdown(ctx)
 	}
 
@@ -120,6 +129,11 @@ func (h *HTTPServer) AddService(capabilityRegistry iface.ICapabilityRegistry,
 	path = strings.TrimSpace(path)
 
 	h.mHttpServerMux.HandleFunc(path, func(writer http.ResponseWriter, request *http.Request) {
+		logger.L(h.ContractId()).Debug("request data",
+			zap.String("path", request.URL.Path),
+			zap.String("method", request.Method),
+			zap.String("path_with_query", request.RequestURI))
+
 		if method != request.Method {
 			writer.WriteHeader(http.StatusMethodNotAllowed)
 			return
@@ -130,11 +144,19 @@ func (h *HTTPServer) AddService(capabilityRegistry iface.ICapabilityRegistry,
 
 		metadata := &model.Metadata{}
 		metadata.Method = request.Method
-		metadata.Path = request.RequestURI
+		metadata.Path = request.URL.EscapedPath()
+		metadata.Headers = make(map[string]string)
+		metadata.Query = make(map[string]string)
 
 		for k, v := range request.Header {
 			if len(v) > 0 {
 				metadata.Headers[k] = v[0]
+			}
+		}
+
+		for k, v := range request.URL.Query() {
+			if len(v) > 0 {
+				metadata.Query[k] = v[0]
 			}
 		}
 

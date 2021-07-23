@@ -23,21 +23,13 @@ var runCMD = &cobra.Command{
 			os.Exit(1)
 		}
 
-		//if conf.EnvironmentConfigIns().CMDLogEnabled {
-		//	fmt.Printf("%+v\n", manifest)
-		//}
-
 		err = DefaultPlatform.Setup(manifest)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
 
-		err = DefaultPlatform.Run()
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
+		DefaultPlatform.Run()
 	},
 }
 
