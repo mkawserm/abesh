@@ -129,6 +129,7 @@ func (h *HTTPServer) AddService(capabilityRegistry iface.ICapabilityRegistry,
 	path = strings.TrimSpace(path)
 
 	h.mHttpServerMux.HandleFunc(path, func(writer http.ResponseWriter, request *http.Request) {
+		logger.L(h.ContractId()).Debug("request stated")
 		logger.L(h.ContractId()).Debug("request data",
 			zap.String("path", request.URL.Path),
 			zap.String("method", request.Method),
@@ -195,6 +196,8 @@ func (h *HTTPServer) AddService(capabilityRegistry iface.ICapabilityRegistry,
 				zap.String("name", h.Name()),
 				zap.String("contract_id", h.ContractId()))
 		}
+
+		logger.L(h.ContractId()).Debug("request completed")
 	})
 
 	return nil
