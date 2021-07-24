@@ -11,6 +11,7 @@ const CategoryService Category = "service"
 const CategorySQLStore Category = "sqlstore"
 const CategoryDatabase Category = "database"
 const CategoryCacheStore Category = "cachestore"
+const CategoryAuthorizer Category = "authorizer"
 
 // CategoryString returns category name
 func CategoryString(category Category) string {

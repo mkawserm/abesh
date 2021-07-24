@@ -8,10 +8,10 @@ capabilities:
 
 services:
   - contract_id: "abesh:ex_echo"
-    authorization:
-      immutable: false
+    authorizer:
+      contract_id: "TODO"
       operator: "AND"
-      expression_list:
+      rules:
         - "TODO"
     values:
       key1: "test1"

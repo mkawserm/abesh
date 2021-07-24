@@ -1,9 +1,9 @@
 package model
 
-type AuthorizationManifest struct {
-	Immutable      bool     `yaml:"immutable" json:"immutable"`
-	Operator       string   `yaml:"operator" json:"operator"`
-	ExpressionList []string `yaml:"expression_list" json:"expression_list"`
+type AuthorizerManifest struct {
+	ContractId string   `yaml:"contract_id" json:"contract_id"`
+	Operator   string   `yaml:"operator" json:"operator"`
+	Rules      []string `yaml:"rules" json:"rules"`
 }
 
 type TriggerManifest struct {
@@ -17,10 +17,10 @@ type CapabilityManifest struct {
 }
 
 type ServiceManifest struct {
-	ContractId    string                 `yaml:"contract_id" json:"contract_id"`
-	Authorization *AuthorizationManifest `yaml:"authorization" json:"authorization"`
-	Values        map[string]string      `yaml:"values" json:"values"`
-	Triggers      []*TriggerManifest     `yaml:"triggers" json:"triggers"`
+	ContractId string              `yaml:"contract_id" json:"contract_id"`
+	Authorizer *AuthorizerManifest `yaml:"authorizer" json:"authorizer"`
+	Values     map[string]string   `yaml:"values" json:"values"`
+	Triggers   []*TriggerManifest  `yaml:"triggers" json:"triggers"`
 }
 
 type Manifest struct {
