@@ -1,0 +1,10 @@
+syntax = "proto3";
+package model;
+option go_package = "github.com/mkawserm/abesh/model;model";
+
+import "model/metadata.proto";
+
+message Event {
+  model.Metadata metadata = 1;
+  bytes data = 2;
+}

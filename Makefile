@@ -15,7 +15,8 @@ protoc:
 		-I=./proto \
 			--go_opt=module=github.com/mkawserm/abesh \
 			--go_out=. \
-			./proto/model/model.proto
+			./proto/model/metadata.proto \
+			./proto/model/event.proto
 
 
 run:

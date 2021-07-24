@@ -1,0 +1,27 @@
+syntax = "proto3";
+package model;
+option go_package = "github.com/mkawserm/abesh/model;model";
+
+import "google/protobuf/any.proto";
+
+message Metadata {
+  string unique_id = 1;
+  uint64 code = 2;
+  repeated string contract_id_list = 3;
+
+  // useful for http trigger
+  string path = 4;
+  string method = 5;
+  map<string,string> query = 6;
+
+  // attach it to response
+  // important for http trigger
+  map<string,string> headers = 7;
+
+  // attach it to response
+  // important for http trigger
+  uint32 status_code = 8;
+  string status = 9;
+
+  google.protobuf.Any data = 500;
+}

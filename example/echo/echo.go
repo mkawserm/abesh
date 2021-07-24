@@ -57,10 +57,10 @@ func (e *Echo) New() iface.ICapability {
 func (e *Echo) Serve(_ context.Context, _ iface.ICapabilityRegistry, _ *model.Event) (*model.Event, error) {
 	outputEvent := &model.Event{
 		Metadata: &model.Metadata{
-			Headers:    map[string]string{"Content-Type": "application/text"},
-			ContractId: e.ContractId(),
-			StatusCode: 200,
-			Status:     "OK",
+			Headers:        map[string]string{"Content-Type": "application/text"},
+			ContractIdList: []string{e.ContractId()},
+			StatusCode:     200,
+			Status:         "OK",
 		},
 
 		Data: []byte("echo"),
