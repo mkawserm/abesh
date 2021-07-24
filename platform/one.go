@@ -82,7 +82,7 @@ func (o *One) SetupTriggers(service iface.IService, triggers []*model.TriggerMan
 			return ErrTriggerNotRegistered
 		}
 
-		err = trigger.AddService(o.capabilityRegistry, t.TriggerValues, service)
+		err = trigger.AddService(o.capabilityRegistry, t.Values, service)
 
 		if err != nil {
 			return err

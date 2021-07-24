@@ -19,11 +19,11 @@ services:
 
     triggers:
       - contract_id: "abesh:httpserver"
-        trigger_values:
+        values:
           method: "GET"
           path: "/default"
 
       - contract_id: "abesh:httpserver"
-        trigger_values:
+        values:
           method: "GET"
           path: "/echo"

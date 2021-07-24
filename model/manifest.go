@@ -7,8 +7,8 @@ type AuthorizerManifest struct {
 }
 
 type TriggerManifest struct {
-	ContractId    string            `yaml:"contract_id" json:"contract_id"`
-	TriggerValues map[string]string `yaml:"trigger_values" json:"trigger_values"`
+	ContractId string            `yaml:"contract_id" json:"contract_id"`
+	Values     map[string]string `yaml:"values" json:"values"`
 }
 
 type CapabilityManifest struct {
