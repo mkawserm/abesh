@@ -82,6 +82,7 @@ func (o *One) SetupTriggers(service iface.IService, triggers []*model.TriggerMan
 			return ErrTriggerNotRegistered
 		}
 
+		logger.L(constant.Name).Debug("adding service to trigger", zap.String("trigger_contract_id", t.ContractId))
 		err = trigger.AddService(o.capabilityRegistry, t.Values, service)
 
 		if err != nil {
@@ -119,6 +120,7 @@ func (o *One) SetupServices(manifest *model.Manifest) error {
 			return err
 		}
 
+		logger.L(constant.Name).Debug("configuring triggers", zap.String("contract_id", service.ContractId()))
 		err = o.SetupTriggers(service, s.Triggers)
 		if err != nil {
 			return err
@@ -133,12 +135,13 @@ func (o *One) Setup(manifest *model.Manifest) error {
 	var err error
 	o.triggers = make(map[string]iface.ITrigger)
 	o.capabilityRegistry = registry.NewCapabilityRegistry()
-
+	logger.L(constant.Name).Debug("configuring capabilities")
 	err = o.SetupCapabilities(manifest)
 	if err != nil {
 		return err
 	}
 
+	logger.L(constant.Name).Debug("configuring services")
 	err = o.SetupServices(manifest)
 	if err != nil {
 		return err
