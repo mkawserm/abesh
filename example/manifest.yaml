@@ -9,10 +9,8 @@ capabilities:
 services:
   - contract_id: "abesh:ex_echo"
     authorizer:
-      contract_id: "TODO"
-      operator: "AND"
-      rules:
-        - "TODO"
+      contract_id: "abesh:ex_authorizer"
+      expression: "TODO"
     values:
       key1: "test1"
       key2: "test2"

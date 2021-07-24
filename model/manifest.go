@@ -1,9 +1,8 @@
 package model
 
 type AuthorizerManifest struct {
-	ContractId string   `yaml:"contract_id" json:"contract_id"`
-	Operator   string   `yaml:"operator" json:"operator"`
-	Rules      []string `yaml:"rules" json:"rules"`
+	ContractId string `yaml:"contract_id" json:"contract_id"`
+	Expression string `yaml:"expression" json:"expression"`
 }
 
 type TriggerManifest struct {
