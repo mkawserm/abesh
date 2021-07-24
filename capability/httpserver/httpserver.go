@@ -109,8 +109,11 @@ func (h *HTTPServer) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (h *HTTPServer) AddService(capabilityRegistry iface.ICapabilityRegistry,
+func (h *HTTPServer) AddService(
+	authorizationHandler iface.AuthorizationHandler,
+	authorizationExpression string,
 	triggerValues map[string]string,
+	capabilityRegistry iface.ICapabilityRegistry,
 	service iface.IService) error {
 
 	var method string
@@ -131,6 +134,12 @@ func (h *HTTPServer) AddService(capabilityRegistry iface.ICapabilityRegistry,
 
 	h.mHttpServerMux.HandleFunc(path, func(writer http.ResponseWriter, request *http.Request) {
 		timerStart := time.Now()
+		defer func() {
+			logger.L(h.ContractId()).Debug("request completed")
+			elapsed := time.Since(timerStart)
+			logger.L(constant.Name).Debug("request execution time", zap.Duration("seconds", elapsed))
+		}()
+
 		logger.L(h.ContractId()).Debug("request stated")
 		logger.L(h.ContractId()).Debug("request data",
 			zap.String("path", request.URL.Path),
@@ -160,6 +169,13 @@ func (h *HTTPServer) AddService(capabilityRegistry iface.ICapabilityRegistry,
 		for k, v := range request.URL.Query() {
 			if len(v) > 0 {
 				metadata.Query[k] = v[0]
+			}
+		}
+
+		if authorizationHandler != nil {
+			if !authorizationHandler(authorizationExpression, metadata) {
+				writer.WriteHeader(http.StatusForbidden)
+				return
 			}
 		}
 
@@ -198,11 +214,6 @@ func (h *HTTPServer) AddService(capabilityRegistry iface.ICapabilityRegistry,
 				zap.String("name", h.Name()),
 				zap.String("contract_id", h.ContractId()))
 		}
-
-		logger.L(h.ContractId()).Debug("request completed")
-
-		elapsed := time.Since(timerStart)
-		logger.L(constant.Name).Debug("request execution time", zap.Duration("seconds", elapsed))
 	})
 
 	return nil

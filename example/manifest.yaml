@@ -9,20 +9,23 @@ capabilities:
 
 services:
   - contract_id: "abesh:ex_echo"
-    authorizer:
-      contract_id: "abesh:ex_authorizer"
-      expression: "allowAll"
     values:
       key1: "test1"
       key2: "test2"
 
     triggers:
       - contract_id: "abesh:httpserver"
+        authorizer:
+          contract_id: "abesh:ex_authorizer"
+          expression: "allowAll"
         values:
           method: "GET"
           path: "/default"
 
       - contract_id: "abesh:httpserver"
+        authorizer:
+          contract_id: "abesh:ex_authorizer"
+          expression: "denyAll"
         values:
           method: "GET"
           path: "/echo"

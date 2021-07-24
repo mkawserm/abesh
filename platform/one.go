@@ -18,6 +18,7 @@ import (
 var ErrCapabilityNotFound = errors.New("capability is not found in the global registry")
 var ErrCapabilityCategoryIsNotService = errors.New("capability category is not service")
 var ErrTriggerNotRegistered = errors.New("the requested trigger has not been registered")
+var ErrAuthorizerNotRegistered = errors.New("the requested authorizer has not been registered")
 
 type One struct {
 	triggers           map[string]iface.ITrigger
@@ -89,17 +90,35 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 	return nil
 }
 
-func (o *One) SetupTriggers(service iface.IService, triggers []*model.TriggerManifest) error {
+func (o *One) SetupTriggers(service iface.IService, triggerManifests []*model.TriggerManifest) error {
 	var err error
 
-	for _, t := range triggers {
+	for _, t := range triggerManifests {
 		trigger := o.triggers[t.ContractId]
 		if trigger == nil {
 			return ErrTriggerNotRegistered
 		}
 
+		var authorizer iface.IAuthorizer
+		var expression string
+		var authorizationHandler iface.AuthorizationHandler
+
+		if t.Authorizer != nil {
+			authorizer = o.authorizers[t.Authorizer.ContractId]
+			expression = t.Authorizer.Expression
+			if authorizer == nil {
+				return ErrAuthorizerNotRegistered
+			}
+
+			authorizationHandler = authorizer.IsAuthorized
+		}
+
 		logger.L(constant.Name).Debug("adding service to trigger", zap.String("trigger_contract_id", t.ContractId))
-		err = trigger.AddService(o.capabilityRegistry, t.Values, service)
+		err = trigger.AddService(authorizationHandler,
+			expression,
+			t.Values,
+			o.capabilityRegistry,
+			service)
 
 		if err != nil {
 			return err

@@ -8,5 +8,9 @@ type ITrigger interface {
 	Start(ctx context.Context) error
 	Stop(ctx context.Context) error
 
-	AddService(capabilityRegistry ICapabilityRegistry, triggerValues map[string]string, service IService) error
+	AddService(authorizationHandler AuthorizationHandler,
+		authorizationExpression string,
+		triggerValues map[string]string,
+		capabilityRegistry ICapabilityRegistry,
+		service IService) error
 }

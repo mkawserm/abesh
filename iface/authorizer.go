@@ -4,5 +4,5 @@ import "github.com/mkawserm/abesh/model"
 
 type IAuthorizer interface {
 	ICapability
-	IsAuthorized(metadata *model.Metadata) bool
+	IsAuthorized(expression string, metadata *model.Metadata) bool
 }

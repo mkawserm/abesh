@@ -53,8 +53,12 @@ func (e *Authorizer) New() iface.ICapability {
 	return &Authorizer{}
 }
 
-func (e *Authorizer) IsAuthorized(_ *model.Metadata) bool {
-	return true
+func (e *Authorizer) IsAuthorized(expression string, _ *model.Metadata) bool {
+	if expression == "allowAll" {
+		return true
+	}
+
+	return false
 }
 
 func init() {

@@ -6,8 +6,9 @@ type AuthorizerManifest struct {
 }
 
 type TriggerManifest struct {
-	ContractId string            `yaml:"contract_id" json:"contract_id"`
-	Values     map[string]string `yaml:"values" json:"values"`
+	ContractId string              `yaml:"contract_id" json:"contract_id"`
+	Authorizer *AuthorizerManifest `yaml:"authorizer" json:"authorizer"`
+	Values     map[string]string   `yaml:"values" json:"values"`
 }
 
 type CapabilityManifest struct {
@@ -16,10 +17,9 @@ type CapabilityManifest struct {
 }
 
 type ServiceManifest struct {
-	ContractId string              `yaml:"contract_id" json:"contract_id"`
-	Authorizer *AuthorizerManifest `yaml:"authorizer" json:"authorizer"`
-	Values     map[string]string   `yaml:"values" json:"values"`
-	Triggers   []*TriggerManifest  `yaml:"triggers" json:"triggers"`
+	ContractId string             `yaml:"contract_id" json:"contract_id"`
+	Values     map[string]string  `yaml:"values" json:"values"`
+	Triggers   []*TriggerManifest `yaml:"triggers" json:"triggers"`
 }
 
 type Manifest struct {
