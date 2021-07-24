@@ -54,7 +54,7 @@ func (e *Echo) New() iface.ICapability {
 	return &Echo{}
 }
 
-func (e *Echo) Process(_ context.Context, _ iface.ICapabilityRegistry, _ *model.Event) (*model.Event, error) {
+func (e *Echo) Serve(_ context.Context, _ iface.ICapabilityRegistry, _ *model.Event) (*model.Event, error) {
 	outputEvent := &model.Event{
 		Metadata: &model.Metadata{
 			Headers:    map[string]string{"Content-Type": "application/text"},

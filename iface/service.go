@@ -8,7 +8,7 @@ import (
 type IService interface {
 	ICapability
 
-	Process(ctx context.Context,
+	Serve(ctx context.Context,
 		capabilityRegistry ICapabilityRegistry,
 		event *model.Event) (*model.Event, error)
 }

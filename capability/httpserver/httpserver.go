@@ -180,7 +180,7 @@ func (h *HTTPServer) AddService(capabilityRegistry iface.ICapabilityRegistry,
 
 		var outputEvent *model.Event
 
-		outputEvent, err = service.Process(request.Context(), capabilityRegistry, inputEvent)
+		outputEvent, err = service.Serve(request.Context(), capabilityRegistry, inputEvent)
 		if err != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
 			return
