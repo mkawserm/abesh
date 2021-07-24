@@ -5,12 +5,13 @@ capabilities:
     values:
       host: "0.0.0.0"
       port: "9090"
+  - contract_id: "abesh:ex_authorizer"
 
 services:
   - contract_id: "abesh:ex_echo"
     authorizer:
       contract_id: "abesh:ex_authorizer"
-      expression: "TODO"
+      expression: "allowAll"
     values:
       key1: "test1"
       key2: "test2"

@@ -21,6 +21,7 @@ var ErrTriggerNotRegistered = errors.New("the requested trigger has not been reg
 
 type One struct {
 	triggers           map[string]iface.ITrigger
+	authorizers        map[string]iface.IAuthorizer
 	capabilityRegistry *registry.CapabilityRegistry
 }
 
@@ -54,6 +55,21 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 			}
 
 			o.triggers[newCapability.ContractId()] = newCapabilityTrigger
+		} else if capability.Category() == string(constant.CategoryAuthorizer) {
+			newCapability := capability.New()
+			newCapabilityAuthorizer := newCapability.(iface.IAuthorizer)
+
+			err = newCapabilityAuthorizer.SetValues(v.Values)
+			if err != nil {
+				return err
+			}
+
+			err = newCapabilityAuthorizer.Setup()
+			if err != nil {
+				return err
+			}
+
+			o.authorizers[newCapability.ContractId()] = newCapabilityAuthorizer
 		} else {
 			newCapability := capability.New()
 			err = newCapability.Setup()
@@ -134,6 +150,7 @@ func (o *One) Setup(manifest *model.Manifest) error {
 	timerStart := time.Now()
 	var err error
 	o.triggers = make(map[string]iface.ITrigger)
+	o.authorizers = make(map[string]iface.IAuthorizer)
 	o.capabilityRegistry = registry.NewCapabilityRegistry()
 	logger.L(constant.Name).Debug("configuring capabilities")
 	err = o.SetupCapabilities(manifest)
