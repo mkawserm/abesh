@@ -20,14 +20,6 @@ func (e *Echo) Version() string {
 	return "0.0.1"
 }
 
-func (e *Echo) Source() string {
-	return "github.com/mkawserm/abesh/example/echo"
-}
-
-func (e *Echo) Runtime() string {
-	return string(constant.RuntimeNative)
-}
-
 func (e *Echo) Category() string {
 	return string(constant.CategoryService)
 }

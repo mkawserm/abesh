@@ -19,14 +19,6 @@ func (e *Authorizer) Version() string {
 	return "0.0.1"
 }
 
-func (e *Authorizer) Source() string {
-	return "github.com/mkawserm/abesh/example/authorizer"
-}
-
-func (e *Authorizer) Runtime() string {
-	return string(constant.RuntimeNative)
-}
-
 func (e *Authorizer) Category() string {
 	return string(constant.CategoryAuthorizer)
 }

@@ -35,14 +35,6 @@ func (h *HTTPServer) Version() string {
 	return "0.0.1"
 }
 
-func (h *HTTPServer) Source() string {
-	return "github.com/mkawserm/abesh/capability/httpserver"
-}
-
-func (h *HTTPServer) Runtime() string {
-	return string(constant.RuntimeNative)
-}
-
 func (h *HTTPServer) Category() string {
 	return string(constant.CategoryTrigger)
 }
