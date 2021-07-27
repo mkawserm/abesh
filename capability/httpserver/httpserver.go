@@ -98,7 +98,7 @@ func (h *HTTPServer) Setup() error {
 	h.mHttpServer.Handler = h.mHttpServerMux
 	h.mHttpServer.Addr = h.mHost + ":" + h.mPort
 
-	logger.L(constant.Name).Info("http server setup complete",
+	logger.L(h.ContractId()).Info("http server setup complete",
 		zap.String("host", h.mHost),
 		zap.String("port", h.mPort))
 
@@ -106,7 +106,7 @@ func (h *HTTPServer) Setup() error {
 }
 
 func (h *HTTPServer) Start(_ context.Context) error {
-	logger.L(constant.Name).Info("http server started at " + h.mHttpServer.Addr)
+	logger.L(h.ContractId()).Info("http server started at " + h.mHttpServer.Addr)
 	if err := h.mHttpServer.ListenAndServe(); err != http.ErrServerClosed {
 		return err
 	}
@@ -152,7 +152,7 @@ func (h *HTTPServer) AddService(
 		defer func() {
 			logger.L(h.ContractId()).Debug("request completed")
 			elapsed := time.Since(timerStart)
-			logger.L(constant.Name).Debug("request execution time", zap.Duration("seconds", elapsed))
+			logger.L(h.ContractId()).Debug("request execution time", zap.Duration("seconds", elapsed))
 		}()
 
 		logger.L(h.ContractId()).Debug("request timeout", zap.Duration("timeout", h.mRequestTimeout))
@@ -167,7 +167,7 @@ func (h *HTTPServer) AddService(
 			writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
 			writer.WriteHeader(http.StatusMethodNotAllowed)
 			if _, err = writer.Write([]byte(GetValue(h.mValues, "s405m", "405 ERROR"))); err != nil {
-				logger.S(constant.Name).Error(err.Error(),
+				logger.S(h.ContractId()).Error(err.Error(),
 					zap.String("version", h.Version()),
 					zap.String("name", h.Name()),
 					zap.String("contract_id", h.ContractId()))
@@ -203,7 +203,7 @@ func (h *HTTPServer) AddService(
 				writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
 				writer.WriteHeader(http.StatusForbidden)
 				if _, err = writer.Write([]byte(GetValue(h.mValues, "s403m", "403 ERROR"))); err != nil {
-					logger.S(constant.Name).Error(err.Error(),
+					logger.S(h.ContractId()).Error(err.Error(),
 						zap.String("version", h.Version()),
 						zap.String("name", h.Name()),
 						zap.String("contract_id", h.ContractId()))
@@ -213,7 +213,7 @@ func (h *HTTPServer) AddService(
 		}
 
 		if data, err = ioutil.ReadAll(request.Body); err != nil {
-			logger.S(constant.Name).Error(err.Error(),
+			logger.S(h.ContractId()).Error(err.Error(),
 				zap.String("version", h.Version()),
 				zap.String("name", h.Name()),
 				zap.String("contract_id", h.ContractId()))
@@ -221,7 +221,7 @@ func (h *HTTPServer) AddService(
 			writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
 			writer.WriteHeader(http.StatusInternalServerError)
 			if _, err = writer.Write([]byte(GetValue(h.mValues, "s500m", "500 ERROR"))); err != nil {
-				logger.S(constant.Name).Error(err.Error(),
+				logger.S(h.ContractId()).Error(err.Error(),
 					zap.String("version", h.Version()),
 					zap.String("name", h.Name()),
 					zap.String("contract_id", h.ContractId()))
@@ -259,7 +259,7 @@ func (h *HTTPServer) AddService(
 			writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
 			writer.WriteHeader(http.StatusRequestTimeout)
 			if _, err = writer.Write([]byte(GetValue(h.mValues, "s408m", "408 ERROR"))); err != nil {
-				logger.S(constant.Name).Error(err.Error(),
+				logger.S(h.ContractId()).Error(err.Error(),
 					zap.String("version", h.Version()),
 					zap.String("name", h.Name()),
 					zap.String("contract_id", h.ContractId()))
@@ -268,7 +268,7 @@ func (h *HTTPServer) AddService(
 			return
 		case r := <-ch:
 			if r.Error == context.DeadlineExceeded {
-				logger.S(constant.Name).Error(r.Error.Error(),
+				logger.S(h.ContractId()).Error(r.Error.Error(),
 					zap.String("version", h.Version()),
 					zap.String("name", h.Name()),
 					zap.String("contract_id", h.ContractId()))
@@ -277,7 +277,7 @@ func (h *HTTPServer) AddService(
 				writer.WriteHeader(http.StatusRequestTimeout)
 
 				if _, err = writer.Write([]byte(GetValue(h.mValues, "s408m", "408 ERROR"))); err != nil {
-					logger.S(constant.Name).Error(err,
+					logger.S(h.ContractId()).Error(err,
 						zap.String("version", h.Version()),
 						zap.String("name", h.Name()),
 						zap.String("contract_id", h.ContractId()))
@@ -286,7 +286,7 @@ func (h *HTTPServer) AddService(
 			}
 
 			if r.Error == context.Canceled {
-				logger.S(constant.Name).Error(r.Error.Error(),
+				logger.S(h.ContractId()).Error(r.Error.Error(),
 					zap.String("version", h.Version()),
 					zap.String("name", h.Name()),
 					zap.String("contract_id", h.ContractId()))
@@ -295,7 +295,7 @@ func (h *HTTPServer) AddService(
 				writer.WriteHeader(499)
 
 				if _, err = writer.Write([]byte(GetValue(h.mValues, "s499m", "499 ERROR"))); err != nil {
-					logger.S(constant.Name).Error(err,
+					logger.S(h.ContractId()).Error(err,
 						zap.String("version", h.Version()),
 						zap.String("name", h.Name()),
 						zap.String("contract_id", h.ContractId()))
@@ -304,7 +304,7 @@ func (h *HTTPServer) AddService(
 			}
 
 			if r.Error != nil {
-				logger.S(constant.Name).Error(r.Error.Error(),
+				logger.S(h.ContractId()).Error(r.Error.Error(),
 					zap.String("version", h.Version()),
 					zap.String("name", h.Name()),
 					zap.String("contract_id", h.ContractId()))
@@ -312,7 +312,7 @@ func (h *HTTPServer) AddService(
 				writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
 				writer.WriteHeader(http.StatusInternalServerError)
 				if _, err = writer.Write([]byte(GetValue(h.mValues, "s500m", "500 ERROR"))); err != nil {
-					logger.S(constant.Name).Error(err.Error(),
+					logger.S(h.ContractId()).Error(err.Error(),
 						zap.String("version", h.Version()),
 						zap.String("name", h.Name()),
 						zap.String("contract_id", h.ContractId()))
@@ -327,7 +327,7 @@ func (h *HTTPServer) AddService(
 			writer.WriteHeader(int(r.Event.Metadata.StatusCode))
 
 			if _, err = writer.Write(r.Event.Value); err != nil {
-				logger.S(constant.Name).Error(err.Error(),
+				logger.S(h.ContractId()).Error(err.Error(),
 					zap.String("version", h.Version()),
 					zap.String("name", h.Name()),
 					zap.String("contract_id", h.ContractId()))
