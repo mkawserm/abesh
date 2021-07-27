@@ -235,11 +235,11 @@ func (h *HTTPServer) AddService(
 			return
 		}
 
-		//NOTE: handle success
-		writer.WriteHeader(int(outputEvent.Metadata.StatusCode))
+		//NOTE: handle success or error from service
 		for k, v := range outputEvent.Metadata.Headers {
 			writer.Header().Add(k, v)
 		}
+		writer.WriteHeader(int(outputEvent.Metadata.StatusCode))
 
 		if _, err = writer.Write(outputEvent.Value); err != nil {
 			logger.S(constant.Name).Error(err.Error(),

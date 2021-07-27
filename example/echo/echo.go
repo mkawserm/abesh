@@ -46,16 +46,30 @@ func (e *Echo) New() iface.ICapability {
 	return &Echo{}
 }
 
-func (e *Echo) Serve(_ context.Context, _ iface.ICapabilityRegistry, _ *model.Event) (*model.Event, error) {
+func (e *Echo) Serve(_ context.Context, _ iface.ICapabilityRegistry, input *model.Event) (*model.Event, error) {
+	m := &model.Metadata{
+		Headers:        map[string]string{"Content-Type": "application/text"},
+		ContractIdList: []string{e.ContractId()},
+		StatusCode:     200,
+		Status:         "OK",
+	}
+
 	outputEvent := &model.Event{
-		Metadata: &model.Metadata{
-			Headers:        map[string]string{"Content-Type": "application/text"},
-			ContractIdList: []string{e.ContractId()},
-			StatusCode:     200,
-			Status:         "OK",
-		},
-		TypeUrl: "application/text",
-		Value:   []byte("echo"),
+		Metadata: m,
+		TypeUrl:  "application/text",
+		Value:    []byte("default echo"),
+	}
+
+	if input.TypeUrl == "application/json" {
+		m.Headers["Content-Type"] = "application/json"
+		outputEvent.TypeUrl = "application/json"
+		outputEvent.Value = []byte("{\"message\":\"echo\"}")
+	}
+
+	if input.TypeUrl == "application/text" {
+		m.Headers["Content-Type"] = "application/text"
+		outputEvent.TypeUrl = "application/text"
+		outputEvent.Value = []byte("echo")
 	}
 
 	return outputEvent, nil
