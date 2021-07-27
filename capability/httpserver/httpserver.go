@@ -18,13 +18,13 @@ import (
 var ErrPathNotDefined = errors.New("path not defined")
 var ErrMethodNotDefined = errors.New("method not defined")
 
-func GetHeader(headers map[string]string, key string) string {
+func GetValue(headers map[string]string, key string, defaultValue string) string {
 	value, ok := headers[key]
 	if ok {
 		return value
 	}
 
-	return ""
+	return defaultValue
 }
 
 type HTTPServer struct {
@@ -134,6 +134,7 @@ func (h *HTTPServer) AddService(
 	path = strings.TrimSpace(path)
 
 	h.mHttpServerMux.HandleFunc(path, func(writer http.ResponseWriter, request *http.Request) {
+		var err error
 		timerStart := time.Now()
 		defer func() {
 			logger.L(h.ContractId()).Debug("request completed")
@@ -148,12 +149,18 @@ func (h *HTTPServer) AddService(
 			zap.String("path_with_query", request.RequestURI))
 
 		if method != request.Method {
+			writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
 			writer.WriteHeader(http.StatusMethodNotAllowed)
+			if _, err = writer.Write([]byte(GetValue(h.mValues, "s405m", "405 ERROR"))); err != nil {
+				logger.S(constant.Name).Error(err.Error(),
+					zap.String("version", h.Version()),
+					zap.String("name", h.Name()),
+					zap.String("contract_id", h.ContractId()))
+			}
 			return
 		}
 
 		var data []byte
-		var err error
 
 		headers := make(map[string]string)
 
@@ -178,7 +185,14 @@ func (h *HTTPServer) AddService(
 
 		if authorizationHandler != nil {
 			if !authorizationHandler(authorizationExpression, metadata) {
+				writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
 				writer.WriteHeader(http.StatusForbidden)
+				if _, err = writer.Write([]byte(GetValue(h.mValues, "s403m", "403 ERROR"))); err != nil {
+					logger.S(constant.Name).Error(err.Error(),
+						zap.String("version", h.Version()),
+						zap.String("name", h.Name()),
+						zap.String("contract_id", h.ContractId()))
+				}
 				return
 			}
 		}
@@ -189,13 +203,20 @@ func (h *HTTPServer) AddService(
 				zap.String("name", h.Name()),
 				zap.String("contract_id", h.ContractId()))
 
+			writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
 			writer.WriteHeader(http.StatusInternalServerError)
+			if _, err = writer.Write([]byte(GetValue(h.mValues, "s500m", "500 ERROR"))); err != nil {
+				logger.S(constant.Name).Error(err.Error(),
+					zap.String("version", h.Version()),
+					zap.String("name", h.Name()),
+					zap.String("contract_id", h.ContractId()))
+			}
 			return
 		}
 
 		inputEvent := &model.Event{
 			Metadata: metadata,
-			TypeUrl:  GetHeader(headers, "content-type"),
+			TypeUrl:  GetValue(headers, "content-type", "application/text"),
 			Value:    data,
 		}
 
@@ -203,7 +224,14 @@ func (h *HTTPServer) AddService(
 
 		outputEvent, err = service.Serve(request.Context(), capabilityRegistry, inputEvent)
 		if err != nil {
+			writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
 			writer.WriteHeader(http.StatusInternalServerError)
+			if _, err = writer.Write([]byte(GetValue(h.mValues, "s500m", "500 ERROR"))); err != nil {
+				logger.S(constant.Name).Error(err.Error(),
+					zap.String("version", h.Version()),
+					zap.String("name", h.Name()),
+					zap.String("contract_id", h.ContractId()))
+			}
 			return
 		}
 
