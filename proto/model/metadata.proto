@@ -13,15 +13,16 @@ message Metadata {
   string path = 4;
   string method = 5;
   map<string,string> query = 6;
+  map<string,string> params = 7;
 
   // attach it to response
   // important for http trigger
-  map<string,string> headers = 7;
+  map<string,string> headers = 8;
 
   // attach it to response
   // important for http trigger
-  uint32 status_code = 8;
-  string status = 9;
+  uint32 status_code = 9;
+  string status = 10;
 
   google.protobuf.Any data = 500;
 }

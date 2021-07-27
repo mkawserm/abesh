@@ -6,5 +6,7 @@ import "model/metadata.proto";
 
 message Event {
   model.Metadata metadata = 1;
-  bytes data = 2;
+  string type_url = 2;
+  // any type of message
+  bytes value = 3;
 }

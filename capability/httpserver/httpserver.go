@@ -18,6 +18,15 @@ import (
 var ErrPathNotDefined = errors.New("path not defined")
 var ErrMethodNotDefined = errors.New("method not defined")
 
+func GetHeader(headers map[string]string, key string) string {
+	value, ok := headers[key]
+	if ok {
+		return value
+	}
+
+	return ""
+}
+
 type HTTPServer struct {
 	mHost   string
 	mPort   string
@@ -146,6 +155,8 @@ func (h *HTTPServer) AddService(
 		var data []byte
 		var err error
 
+		headers := make(map[string]string)
+
 		metadata := &model.Metadata{}
 		metadata.Method = request.Method
 		metadata.Path = request.URL.EscapedPath()
@@ -155,6 +166,7 @@ func (h *HTTPServer) AddService(
 		for k, v := range request.Header {
 			if len(v) > 0 {
 				metadata.Headers[k] = v[0]
+				headers[strings.ToLower(strings.TrimSpace(k))] = v[0]
 			}
 		}
 
@@ -183,7 +195,8 @@ func (h *HTTPServer) AddService(
 
 		inputEvent := &model.Event{
 			Metadata: metadata,
-			Data:     data,
+			TypeUrl:  GetHeader(headers, "content-type"),
+			Value:    data,
 		}
 
 		var outputEvent *model.Event
@@ -200,7 +213,7 @@ func (h *HTTPServer) AddService(
 			writer.Header().Add(k, v)
 		}
 
-		if _, err = writer.Write(outputEvent.Data); err != nil {
+		if _, err = writer.Write(outputEvent.Value); err != nil {
 			logger.S(constant.Name).Error(err.Error(),
 				zap.String("version", h.Version()),
 				zap.String("name", h.Name()),
