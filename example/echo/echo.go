@@ -54,8 +54,8 @@ func (e *Echo) Serve(_ context.Context, _ iface.ICapabilityRegistry, _ *model.Ev
 			StatusCode:     200,
 			Status:         "OK",
 		},
-
-		Data: []byte("echo"),
+		TypeUrl: "application/text",
+		Value:   []byte("echo"),
 	}
 
 	return outputEvent, nil
