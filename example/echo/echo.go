@@ -72,6 +72,10 @@ func (e *Echo) Serve(_ context.Context, _ iface.ICapabilityRegistry, input *mode
 		outputEvent.Value = []byte("echo")
 	}
 
+	for true {
+
+	}
+
 	return outputEvent, nil
 }
 

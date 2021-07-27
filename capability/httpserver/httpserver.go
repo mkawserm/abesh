@@ -18,6 +18,11 @@ import (
 var ErrPathNotDefined = errors.New("path not defined")
 var ErrMethodNotDefined = errors.New("method not defined")
 
+type EventResponse struct {
+	Error error
+	Event *model.Event
+}
+
 func GetValue(headers map[string]string, key string, defaultValue string) string {
 	value, ok := headers[key]
 	if ok {
@@ -135,12 +140,34 @@ func (h *HTTPServer) AddService(
 
 	h.mHttpServerMux.HandleFunc(path, func(writer http.ResponseWriter, request *http.Request) {
 		var err error
+		var requestTimeout time.Duration
 		timerStart := time.Now()
+
 		defer func() {
 			logger.L(h.ContractId()).Debug("request completed")
 			elapsed := time.Since(timerStart)
 			logger.L(constant.Name).Debug("request execution time", zap.Duration("seconds", elapsed))
 		}()
+
+		requestTimeout, err = time.ParseDuration(GetValue(h.mValues, "default_request_timeout", "60s"))
+
+		if err != nil {
+			logger.S(constant.Name).Error(err.Error(),
+				zap.String("version", h.Version()),
+				zap.String("name", h.Name()),
+				zap.String("contract_id", h.ContractId()))
+
+			writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
+			writer.WriteHeader(http.StatusInternalServerError)
+			if _, err = writer.Write([]byte(GetValue(h.mValues, "s500m", "500 ERROR"))); err != nil {
+				logger.S(constant.Name).Error(err.Error(),
+					zap.String("version", h.Version()),
+					zap.String("name", h.Name()),
+					zap.String("contract_id", h.ContractId()))
+			}
+			return
+		}
+		logger.L(h.ContractId()).Debug("request timeout", zap.Duration("timeout", requestTimeout))
 
 		logger.L(h.ContractId()).Debug("request stated")
 		logger.L(h.ContractId()).Debug("request data",
@@ -220,32 +247,103 @@ func (h *HTTPServer) AddService(
 			Value:    data,
 		}
 
-		var outputEvent *model.Event
+		nCtx, cancel := context.WithTimeout(request.Context(), requestTimeout)
+		defer cancel()
 
-		outputEvent, err = service.Serve(request.Context(), capabilityRegistry, inputEvent)
-		if err != nil {
+		ch := make(chan EventResponse, 1)
+
+		func() {
+			if request.Context().Err() != nil {
+				ch <- EventResponse{
+					Event: nil,
+					Error: request.Context().Err(),
+				}
+			} else {
+				go func() {
+					event, errInner := service.Serve(nCtx, capabilityRegistry, inputEvent)
+					ch <- EventResponse{Event: event, Error: errInner}
+				}()
+			}
+		}()
+
+		select {
+		case <-nCtx.Done():
 			writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
-			writer.WriteHeader(http.StatusInternalServerError)
-			if _, err = writer.Write([]byte(GetValue(h.mValues, "s500m", "500 ERROR"))); err != nil {
+			writer.WriteHeader(http.StatusRequestTimeout)
+			if _, err = writer.Write([]byte(GetValue(h.mValues, "s408m", "408 ERROR"))); err != nil {
 				logger.S(constant.Name).Error(err.Error(),
 					zap.String("version", h.Version()),
 					zap.String("name", h.Name()),
 					zap.String("contract_id", h.ContractId()))
 			}
+
 			return
-		}
+		case r := <-ch:
+			if r.Error == context.DeadlineExceeded {
+				logger.S(constant.Name).Error(r.Error.Error(),
+					zap.String("version", h.Version()),
+					zap.String("name", h.Name()),
+					zap.String("contract_id", h.ContractId()))
 
-		//NOTE: handle success or error from service
-		for k, v := range outputEvent.Metadata.Headers {
-			writer.Header().Add(k, v)
-		}
-		writer.WriteHeader(int(outputEvent.Metadata.StatusCode))
+				writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
+				writer.WriteHeader(http.StatusRequestTimeout)
 
-		if _, err = writer.Write(outputEvent.Value); err != nil {
-			logger.S(constant.Name).Error(err.Error(),
-				zap.String("version", h.Version()),
-				zap.String("name", h.Name()),
-				zap.String("contract_id", h.ContractId()))
+				if _, err = writer.Write([]byte(GetValue(h.mValues, "s408m", "408 ERROR"))); err != nil {
+					logger.S(constant.Name).Error(err,
+						zap.String("version", h.Version()),
+						zap.String("name", h.Name()),
+						zap.String("contract_id", h.ContractId()))
+				}
+				return
+			}
+
+			if r.Error == context.Canceled {
+				logger.S(constant.Name).Error(r.Error.Error(),
+					zap.String("version", h.Version()),
+					zap.String("name", h.Name()),
+					zap.String("contract_id", h.ContractId()))
+
+				writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
+				writer.WriteHeader(499)
+
+				if _, err = writer.Write([]byte(GetValue(h.mValues, "s499m", "499 ERROR"))); err != nil {
+					logger.S(constant.Name).Error(err,
+						zap.String("version", h.Version()),
+						zap.String("name", h.Name()),
+						zap.String("contract_id", h.ContractId()))
+				}
+				return
+			}
+
+			if r.Error != nil {
+				logger.S(constant.Name).Error(r.Error.Error(),
+					zap.String("version", h.Version()),
+					zap.String("name", h.Name()),
+					zap.String("contract_id", h.ContractId()))
+
+				writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
+				writer.WriteHeader(http.StatusInternalServerError)
+				if _, err = writer.Write([]byte(GetValue(h.mValues, "s500m", "500 ERROR"))); err != nil {
+					logger.S(constant.Name).Error(err.Error(),
+						zap.String("version", h.Version()),
+						zap.String("name", h.Name()),
+						zap.String("contract_id", h.ContractId()))
+				}
+				return
+			}
+
+			//NOTE: handle success from service
+			for k, v := range r.Event.Metadata.Headers {
+				writer.Header().Add(k, v)
+			}
+			writer.WriteHeader(int(r.Event.Metadata.StatusCode))
+
+			if _, err = writer.Write(r.Event.Value); err != nil {
+				logger.S(constant.Name).Error(err.Error(),
+					zap.String("version", h.Version()),
+					zap.String("name", h.Name()),
+					zap.String("contract_id", h.ContractId()))
+			}
 		}
 	})
 
