@@ -33,9 +33,10 @@ func GetValue(headers map[string]string, key string, defaultValue string) string
 }
 
 type HTTPServer struct {
-	mHost   string
-	mPort   string
-	mValues map[string]string
+	mHost           string
+	mPort           string
+	mRequestTimeout time.Duration
+	mValues         map[string]string
 
 	mHttpServer    *http.Server
 	mHttpServerMux *http.ServeMux
@@ -76,6 +77,12 @@ func (h *HTTPServer) SetValues(values map[string]string) error {
 		h.mPort = "8080"
 	}
 
+	requestTimeout, err := time.ParseDuration(GetValue(h.mValues, "default_request_timeout", "60s"))
+	if err != nil {
+		return err
+	}
+
+	h.mRequestTimeout = requestTimeout
 	return nil
 }
 
@@ -140,7 +147,6 @@ func (h *HTTPServer) AddService(
 
 	h.mHttpServerMux.HandleFunc(path, func(writer http.ResponseWriter, request *http.Request) {
 		var err error
-		var requestTimeout time.Duration
 		timerStart := time.Now()
 
 		defer func() {
@@ -149,25 +155,7 @@ func (h *HTTPServer) AddService(
 			logger.L(constant.Name).Debug("request execution time", zap.Duration("seconds", elapsed))
 		}()
 
-		requestTimeout, err = time.ParseDuration(GetValue(h.mValues, "default_request_timeout", "60s"))
-
-		if err != nil {
-			logger.S(constant.Name).Error(err.Error(),
-				zap.String("version", h.Version()),
-				zap.String("name", h.Name()),
-				zap.String("contract_id", h.ContractId()))
-
-			writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
-			writer.WriteHeader(http.StatusInternalServerError)
-			if _, err = writer.Write([]byte(GetValue(h.mValues, "s500m", "500 ERROR"))); err != nil {
-				logger.S(constant.Name).Error(err.Error(),
-					zap.String("version", h.Version()),
-					zap.String("name", h.Name()),
-					zap.String("contract_id", h.ContractId()))
-			}
-			return
-		}
-		logger.L(h.ContractId()).Debug("request timeout", zap.Duration("timeout", requestTimeout))
+		logger.L(h.ContractId()).Debug("request timeout", zap.Duration("timeout", h.mRequestTimeout))
 
 		logger.L(h.ContractId()).Debug("request stated")
 		logger.L(h.ContractId()).Debug("request data",
@@ -247,7 +235,7 @@ func (h *HTTPServer) AddService(
 			Value:    data,
 		}
 
-		nCtx, cancel := context.WithTimeout(request.Context(), requestTimeout)
+		nCtx, cancel := context.WithTimeout(request.Context(), h.mRequestTimeout)
 		defer cancel()
 
 		ch := make(chan EventResponse, 1)
