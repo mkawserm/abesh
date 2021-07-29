@@ -33,10 +33,11 @@ func GetValue(headers map[string]string, key string, defaultValue string) string
 }
 
 type HTTPServer struct {
-	mHost           string
-	mPort           string
-	mRequestTimeout time.Duration
-	mValues         map[string]string
+	mHost                     string
+	mPort                     string
+	mRequestTimeout           time.Duration
+	mDefault404HandlerEnabled bool
+	mValues                   map[string]string
 
 	mHttpServer    *http.Server
 	mHttpServerMux *http.ServeMux
@@ -83,6 +84,15 @@ func (h *HTTPServer) SetValues(values map[string]string) error {
 	}
 
 	h.mRequestTimeout = requestTimeout
+
+	default404Handler := GetValue(h.mValues, "default_404_handler_enabled", "true")
+
+	if default404Handler == "true" {
+		h.mDefault404HandlerEnabled = true
+	} else {
+		h.mDefault404HandlerEnabled = false
+	}
+
 	return nil
 }
 
@@ -97,6 +107,37 @@ func (h *HTTPServer) Setup() error {
 	// setup server details
 	h.mHttpServer.Handler = h.mHttpServerMux
 	h.mHttpServer.Addr = h.mHost + ":" + h.mPort
+
+	if h.mDefault404HandlerEnabled {
+		h.mHttpServerMux.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
+			logger.L(h.ContractId()).Debug("request started")
+			logger.L(h.ContractId()).Debug("request data",
+				zap.String("path", request.URL.Path),
+				zap.String("method", request.Method),
+				zap.String("path_with_query", request.RequestURI))
+
+			logger.L(h.ContractId()).Debug("request local timeout in seconds", zap.Duration("timeout", h.mRequestTimeout))
+
+			timerStart := time.Now()
+
+			defer func() {
+				logger.L(h.ContractId()).Debug("request completed")
+				elapsed := time.Since(timerStart)
+				logger.L(h.ContractId()).Debug("request execution time", zap.Duration("seconds", elapsed))
+			}()
+
+			writer.Header().Add("Content-Type", GetValue(h.mValues, "default_content_type", "application/text"))
+			writer.WriteHeader(http.StatusNotFound)
+
+			if _, err := writer.Write([]byte(GetValue(h.mValues, "s404m", "404 ERROR"))); err != nil {
+				logger.S(h.ContractId()).Error(err.Error(),
+					zap.String("version", h.Version()),
+					zap.String("name", h.Name()),
+					zap.String("contract_id", h.ContractId()))
+			}
+			return
+		})
+	}
 
 	logger.L(h.ContractId()).Info("http server setup complete",
 		zap.String("host", h.mHost),
@@ -155,9 +196,9 @@ func (h *HTTPServer) AddService(
 			logger.L(h.ContractId()).Debug("request execution time", zap.Duration("seconds", elapsed))
 		}()
 
-		logger.L(h.ContractId()).Debug("request timeout", zap.Duration("timeout", h.mRequestTimeout))
+		logger.L(h.ContractId()).Debug("request local timeout in seconds", zap.Duration("timeout", h.mRequestTimeout))
 
-		logger.L(h.ContractId()).Debug("request stated")
+		logger.L(h.ContractId()).Debug("request started")
 		logger.L(h.ContractId()).Debug("request data",
 			zap.String("path", request.URL.Path),
 			zap.String("method", request.Method),

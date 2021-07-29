@@ -7,6 +7,7 @@ capabilities:
       port: "9090"
       default_request_timeout: "5ms"
       default_content_type: "application/text"
+      default_404_handler_enabled: "true"
       s500m: "500 error"
       s404m: "404 error"
       s403m: "403 error"
