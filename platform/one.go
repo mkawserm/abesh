@@ -3,6 +3,7 @@ package platform
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/mkawserm/abesh/constant"
 	"github.com/mkawserm/abesh/iface"
 	"github.com/mkawserm/abesh/logger"
@@ -26,11 +27,21 @@ type One struct {
 	capabilityRegistry *registry.CapabilityRegistry
 }
 
+func (o *One) TransmitInputEvent(contractId string, event *model.Event) error {
+	fmt.Printf("TIE: %s - %+v\n", contractId, event)
+	return nil
+}
+
+func (o *One) TransmitOutputEvent(contractId string, event *model.Event) error {
+	fmt.Printf("TIE: %s - %+v\n", contractId, event)
+	return nil
+}
+
 func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 	var err error
 
 	// configure all capability
-	// separate triggers, authorizers from other
+	// separate triggers, authorizers, consumers from other
 	// capabilities
 	for _, v := range manifest.Capabilities {
 		capability := registry.GlobalRegistry().GetCapability(v.ContractId)
@@ -55,6 +66,11 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 				return err
 			}
 
+			err = newCapabilityTrigger.AddEventTransmitter(o)
+			if err != nil {
+				return err
+			}
+
 			o.triggers[newCapability.ContractId()] = newCapabilityTrigger
 		} else if capability.Category() == string(constant.CategoryAuthorizer) {
 			newCapability := capability.New()
@@ -71,6 +87,8 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 			}
 
 			o.authorizers[newCapability.ContractId()] = newCapabilityAuthorizer
+		} else if capability.Category() == string(constant.CategoryConsumer) {
+
 		} else {
 			newCapability := capability.New()
 			err = newCapability.Setup()

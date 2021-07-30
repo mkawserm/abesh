@@ -15,6 +15,7 @@ capabilities:
       s408m: "408 request timeout"
       s499m: "499 request cancelled"
   - contract_id: "abesh:ex_authorizer"
+  - contract_id: "abesh:ex_event_consumer"
 
 services:
   - contract_id: "abesh:ex_echo"
@@ -38,3 +39,8 @@ services:
         values:
           method: "GET"
           path: "/echo"
+
+consumers:
+  - name: "test_consumer"
+    source: "abesh:ex_echo"
+    sink: "abesh:ex_event_consumer"

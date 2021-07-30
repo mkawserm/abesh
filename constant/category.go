@@ -10,6 +10,7 @@ const CategoryTrigger Category = "trigger"
 const CategoryService Category = "service"
 const CategorySQLStore Category = "sqlstore"
 const CategoryDatabase Category = "database"
+const CategoryConsumer Category = "consumer"
 const CategoryCacheStore Category = "cachestore"
 const CategoryAuthorizer Category = "authorizer"
 

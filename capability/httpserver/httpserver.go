@@ -39,8 +39,9 @@ type HTTPServer struct {
 	mDefault404HandlerEnabled bool
 	mValues                   map[string]string
 
-	mHttpServer    *http.Server
-	mHttpServerMux *http.ServeMux
+	mHttpServer       *http.Server
+	mHttpServerMux    *http.ServeMux
+	mEventTransmitter iface.IEventTransmitter
 }
 
 func (h *HTTPServer) Name() string {
@@ -94,6 +95,15 @@ func (h *HTTPServer) SetValues(values map[string]string) error {
 	}
 
 	return nil
+}
+
+func (h *HTTPServer) AddEventTransmitter(eventTransmitter iface.IEventTransmitter) error {
+	h.mEventTransmitter = eventTransmitter
+	return nil
+}
+
+func (h *HTTPServer) GetEventTransmitter() iface.IEventTransmitter {
+	return h.mEventTransmitter
 }
 
 func (h *HTTPServer) New() iface.ICapability {
@@ -276,6 +286,19 @@ func (h *HTTPServer) AddService(
 			Value:    data,
 		}
 
+		// transmit input event
+		go func() {
+			if h.GetEventTransmitter() != nil {
+				err = h.GetEventTransmitter().TransmitInputEvent(service.ContractId(), inputEvent)
+				if err != nil {
+					logger.S(h.ContractId()).Error(err.Error(),
+						zap.String("version", h.Version()),
+						zap.String("name", h.Name()),
+						zap.String("contract_id", h.ContractId()))
+				}
+			}
+		}()
+
 		nCtx, cancel := context.WithTimeout(request.Context(), h.mRequestTimeout)
 		defer cancel()
 
@@ -360,6 +383,19 @@ func (h *HTTPServer) AddService(
 				}
 				return
 			}
+
+			// transmit output event
+			go func() {
+				if h.GetEventTransmitter() != nil {
+					err = h.GetEventTransmitter().TransmitOutputEvent(service.ContractId(), r.Event)
+					if err != nil {
+						logger.S(h.ContractId()).Error(err.Error(),
+							zap.String("version", h.Version()),
+							zap.String("name", h.Name()),
+							zap.String("contract_id", h.ContractId()))
+					}
+				}
+			}()
 
 			//NOTE: handle success from service
 			for k, v := range r.Event.Metadata.Headers {
