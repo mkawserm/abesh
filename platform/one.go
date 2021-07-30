@@ -35,24 +35,24 @@ type One struct {
 	consumersCapability   map[string]iface.IConsumer
 	capabilityRegistry    *registry.CapabilityRegistry
 
-	sourceSinkMap map[string]string
+	sourceSinkMap map[string][]string
 
 	eventDataChannel EventDataChannel
 }
 
-func (o *One) GetConsumer(contractId string) iface.IConsumer {
+func (o *One) GetConsumers(contractId string) []iface.IConsumer {
 	var ok bool
-	var v string
-	var c iface.IConsumer
+	var v []string
+	var c []iface.IConsumer
 
 	v, ok = o.sourceSinkMap[contractId]
 	if !ok {
 		return nil
 	}
 
-	c, ok = o.consumersCapability[v]
-	if !ok {
-		return nil
+	c = make([]iface.IConsumer, len(v))
+	for index, sv := range v {
+		c[index], ok = o.consumersCapability[sv]
 	}
 
 	return c
@@ -202,7 +202,14 @@ func (o *One) SetupTriggers(service iface.IService, triggerManifests []*model.Tr
 
 func (o *One) SetupConsumers(manifest *model.Manifest) error {
 	for _, cm := range manifest.Consumers {
-		o.sourceSinkMap[cm.Source] = cm.Sink
+		v, ok := o.sourceSinkMap[cm.Source]
+
+		if !ok {
+			v = make([]string, 0)
+		}
+
+		v = append(v, cm.Sink)
+		o.sourceSinkMap[cm.Source] = v
 	}
 
 	return nil
@@ -254,7 +261,7 @@ func (o *One) Setup(manifest *model.Manifest) error {
 	o.consumersCapability = make(map[string]iface.IConsumer)
 	o.capabilityRegistry = registry.NewCapabilityRegistry()
 
-	o.sourceSinkMap = make(map[string]string)
+	o.sourceSinkMap = make(map[string][]string)
 	o.eventDataChannel = make(EventDataChannel, conf.EnvironmentConfigIns().EventBufferSize)
 
 	logger.L(constant.Name).Debug("configuring capabilities")
@@ -288,32 +295,39 @@ func (o *One) EventDispatcher() {
 			break
 		}
 
-		consumer := o.GetConsumer(edc.ContractId)
-		if consumer == nil {
+		consumers := o.GetConsumers(edc.ContractId)
+		if consumers == nil {
 			logger.L(constant.Name).Debug("no consumer is assigned",
 				zap.String("source", edc.ContractId), zap.Any("event", edc))
 		}
 
-		if edc.State == 1 {
-			go func() {
-				err := consumer.ConsumeInputEvent(edc.ContractId, edc.Event)
-				if err != nil {
-					logger.L(constant.Name).Error("error while sending input event data to consumer",
-						zap.String("source", edc.ContractId))
-				}
-			}()
+		for _, consumer := range consumers {
+			if consumer == nil {
+				continue
+			}
+
+			if edc.State == 1 {
+				go func() {
+					err := consumer.ConsumeInputEvent(edc.ContractId, edc.Event)
+					if err != nil {
+						logger.L(constant.Name).Error("error while sending input event data to consumer",
+							zap.String("source", edc.ContractId))
+					}
+				}()
+			}
+
+			if edc.State == 2 {
+				go func() {
+					err := consumer.ConsumeOutputEvent(edc.ContractId, edc.Event)
+					if err != nil {
+						logger.L(constant.Name).Error("error while sending output event data to consumer",
+							zap.String("source", edc.ContractId))
+					}
+				}()
+			}
 		}
 
-		if edc.State == 2 {
-			go func() {
-				err := consumer.ConsumeOutputEvent(edc.ContractId, edc.Event)
-				if err != nil {
-					logger.L(constant.Name).Error("error while sending output event data to consumer",
-						zap.String("source", edc.ContractId))
-				}
-			}()
-		}
-	}
+	} // FOR LOOP END
 }
 
 func (o *One) Run() {
