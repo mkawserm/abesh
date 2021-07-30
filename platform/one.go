@@ -208,7 +208,16 @@ func (o *One) SetupConsumers(manifest *model.Manifest) error {
 			v = make([]string, 0)
 		}
 
-		v = append(v, cm.Sink)
+		if len(v) == 0 {
+			v = append(v, cm.Sink)
+		} else {
+			if Search(len(v), func(index int) bool {
+				return v[index] == cm.Sink
+			}) == -1 {
+				v = append(v, cm.Sink)
+			}
+		}
+
 		o.sourceSinkMap[cm.Source] = v
 	}
 
@@ -389,4 +398,13 @@ func (o *One) Run() {
 	<-idleChan
 
 	logger.L(constant.Name).Info("shutdown complete")
+}
+
+func Search(length int, f func(index int) bool) int {
+	for index := 0; index < length; index++ {
+		if f(index) {
+			return index
+		}
+	}
+	return -1
 }
