@@ -30,8 +30,8 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 	var err error
 
 	// configure all capability
-	// separate triggers from other
-	// capability
+	// separate triggers, authorizers from other
+	// capabilities
 	for _, v := range manifest.Capabilities {
 		capability := registry.GlobalRegistry().GetCapability(v.ContractId)
 		if capability == nil {
@@ -200,7 +200,7 @@ func (o *One) Run() {
 		logger.L(constant.Name).Info("shutdown signal received",
 			zap.String("signal", sig.String()))
 
-		logger.L(constant.Name).Info("preparing from shutdown")
+		logger.L(constant.Name).Info("preparing for shutdown")
 		logger.L(constant.Name).Info("closing all triggers")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
