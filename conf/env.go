@@ -6,8 +6,9 @@ import (
 )
 
 type EnvironmentConfig struct {
-	LogLevel        string  `env:"ABESH_LOG_LEVEL" envDefault:"debug"`
-	CMDLogEnabled   bool    `env:"ABESH_CMD_LOG_ENABLED" envDefault:"false"`
+	LogLevel        string `env:"ABESH_LOG_LEVEL" envDefault:"debug"`
+	CMDLogEnabled   bool   `env:"ABESH_CMD_LOG_ENABLED" envDefault:"false"`
+	EventBufferSize int    `env:"ABESH_EVENT_BUFFER_SIZE" envDefault:"100"`
 }
 
 var instantiated *EnvironmentConfig

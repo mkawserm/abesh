@@ -22,8 +22,14 @@ type ServiceManifest struct {
 	Triggers   []*TriggerManifest `yaml:"triggers" json:"triggers"`
 }
 
+type ConsumerManifest struct {
+	Source string `yaml:"source" json:"source"`
+	Sink   string `yaml:"sink" json:"sink"`
+}
+
 type Manifest struct {
 	Version      string                `yaml:"version" json:"version"` // 1
 	Capabilities []*CapabilityManifest `yaml:"capabilities" json:"capabilities"`
 	Services     []*ServiceManifest    `yaml:"services" json:"services"`
+	Consumers    []*ConsumerManifest   `yaml:"consumers" json:"consumers"`
 }

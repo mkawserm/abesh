@@ -41,6 +41,5 @@ services:
           path: "/echo"
 
 consumers:
-  - name: "test_consumer"
-    source: "abesh:ex_echo"
+  - source: "abesh:ex_echo"
     sink: "abesh:ex_event_consumer"

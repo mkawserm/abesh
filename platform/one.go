@@ -3,7 +3,7 @@ package platform
 import (
 	"context"
 	"errors"
-	"fmt"
+	"github.com/mkawserm/abesh/conf"
 	"github.com/mkawserm/abesh/constant"
 	"github.com/mkawserm/abesh/iface"
 	"github.com/mkawserm/abesh/logger"
@@ -21,19 +21,59 @@ var ErrCapabilityCategoryIsNotService = errors.New("capability category is not s
 var ErrTriggerNotRegistered = errors.New("the requested trigger has not been registered")
 var ErrAuthorizerNotRegistered = errors.New("the requested authorizer has not been registered")
 
+type EventData struct {
+	State      uint8 /*0 break 1 input 2 output*/
+	ContractId string
+	Event      *model.Event
+}
+
+type EventDataChannel chan EventData
+
 type One struct {
-	triggers           map[string]iface.ITrigger
-	authorizers        map[string]iface.IAuthorizer
-	capabilityRegistry *registry.CapabilityRegistry
+	triggersCapability    map[string]iface.ITrigger
+	authorizersCapability map[string]iface.IAuthorizer
+	consumersCapability   map[string]iface.IConsumer
+	capabilityRegistry    *registry.CapabilityRegistry
+
+	sourceSinkMap map[string]string
+
+	eventDataChannel EventDataChannel
+}
+
+func (o *One) GetConsumer(contractId string) iface.IConsumer {
+	var ok bool
+	var v string
+	var c iface.IConsumer
+
+	v, ok = o.sourceSinkMap[contractId]
+	if !ok {
+		return nil
+	}
+
+	c, ok = o.consumersCapability[v]
+	if !ok {
+		return nil
+	}
+
+	return c
 }
 
 func (o *One) TransmitInputEvent(contractId string, event *model.Event) error {
-	fmt.Printf("TIE: %s - %+v\n", contractId, event)
+	o.eventDataChannel <- EventData{
+		State:      1,
+		ContractId: contractId,
+		Event:      event,
+	}
 	return nil
 }
 
 func (o *One) TransmitOutputEvent(contractId string, event *model.Event) error {
-	fmt.Printf("TIE: %s - %+v\n", contractId, event)
+	o.eventDataChannel <- EventData{
+		State:      2,
+		ContractId: contractId,
+		Event:      event,
+	}
+
 	return nil
 }
 
@@ -41,7 +81,7 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 	var err error
 
 	// configure all capability
-	// separate triggers, authorizers, consumers from other
+	// separate triggersCapability, authorizersCapability, consumersCapability from other
 	// capabilities
 	for _, v := range manifest.Capabilities {
 		capability := registry.GlobalRegistry().GetCapability(v.ContractId)
@@ -71,7 +111,7 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 				return err
 			}
 
-			o.triggers[newCapability.ContractId()] = newCapabilityTrigger
+			o.triggersCapability[newCapability.ContractId()] = newCapabilityTrigger
 		} else if capability.Category() == string(constant.CategoryAuthorizer) {
 			newCapability := capability.New()
 			newCapabilityAuthorizer := newCapability.(iface.IAuthorizer)
@@ -86,17 +126,31 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 				return err
 			}
 
-			o.authorizers[newCapability.ContractId()] = newCapabilityAuthorizer
+			o.authorizersCapability[newCapability.ContractId()] = newCapabilityAuthorizer
 		} else if capability.Category() == string(constant.CategoryConsumer) {
-
-		} else {
 			newCapability := capability.New()
-			err = newCapability.Setup()
+			newCapabilityConsumer := newCapability.(iface.IConsumer)
+
+			err = newCapabilityConsumer.SetValues(v.Values)
 			if err != nil {
 				return err
 			}
 
+			err = newCapabilityConsumer.Setup()
+			if err != nil {
+				return err
+			}
+
+			o.consumersCapability[newCapability.ContractId()] = newCapabilityConsumer
+		} else {
+			newCapability := capability.New()
+
 			err = newCapability.SetValues(v.Values)
+			if err != nil {
+				return err
+			}
+
+			err = newCapability.Setup()
 			if err != nil {
 				return err
 			}
@@ -112,7 +166,7 @@ func (o *One) SetupTriggers(service iface.IService, triggerManifests []*model.Tr
 	var err error
 
 	for _, t := range triggerManifests {
-		trigger := o.triggers[t.ContractId]
+		trigger := o.triggersCapability[t.ContractId]
 		if trigger == nil {
 			return ErrTriggerNotRegistered
 		}
@@ -122,7 +176,7 @@ func (o *One) SetupTriggers(service iface.IService, triggerManifests []*model.Tr
 		var authorizationHandler iface.AuthorizationHandler
 
 		if t.Authorizer != nil {
-			authorizer = o.authorizers[t.Authorizer.ContractId]
+			authorizer = o.authorizersCapability[t.Authorizer.ContractId]
 			expression = t.Authorizer.Expression
 			if authorizer == nil {
 				return ErrAuthorizerNotRegistered
@@ -141,6 +195,14 @@ func (o *One) SetupTriggers(service iface.IService, triggerManifests []*model.Tr
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (o *One) SetupConsumers(manifest *model.Manifest) error {
+	for _, cm := range manifest.Consumers {
+		o.sourceSinkMap[cm.Source] = cm.Sink
 	}
 
 	return nil
@@ -173,7 +235,7 @@ func (o *One) SetupServices(manifest *model.Manifest) error {
 			return err
 		}
 
-		logger.L(constant.Name).Debug("configuring triggers", zap.String("contract_id", service.ContractId()))
+		logger.L(constant.Name).Debug("configuring triggersCapability", zap.String("contract_id", service.ContractId()))
 		err = o.SetupTriggers(service, s.Triggers)
 		if err != nil {
 			return err
@@ -186,9 +248,15 @@ func (o *One) SetupServices(manifest *model.Manifest) error {
 func (o *One) Setup(manifest *model.Manifest) error {
 	timerStart := time.Now()
 	var err error
-	o.triggers = make(map[string]iface.ITrigger)
-	o.authorizers = make(map[string]iface.IAuthorizer)
+
+	o.triggersCapability = make(map[string]iface.ITrigger)
+	o.authorizersCapability = make(map[string]iface.IAuthorizer)
+	o.consumersCapability = make(map[string]iface.IConsumer)
 	o.capabilityRegistry = registry.NewCapabilityRegistry()
+
+	o.sourceSinkMap = make(map[string]string)
+	o.eventDataChannel = make(EventDataChannel, conf.EnvironmentConfigIns().EventBufferSize)
+
 	logger.L(constant.Name).Debug("configuring capabilities")
 	err = o.SetupCapabilities(manifest)
 	if err != nil {
@@ -201,9 +269,51 @@ func (o *One) Setup(manifest *model.Manifest) error {
 		return err
 	}
 
+	logger.L(constant.Name).Debug("configuring consumers")
+	err = o.SetupConsumers(manifest)
+	if err != nil {
+		return err
+	}
+
 	elapsed := time.Since(timerStart)
+
 	logger.L(constant.Name).Info("setup execution time", zap.Duration("seconds", elapsed))
 	return nil
+}
+
+func (o *One) EventDispatcher() {
+	for {
+		edc := <-o.eventDataChannel
+		if edc.State == 0 {
+			break
+		}
+
+		consumer := o.GetConsumer(edc.ContractId)
+		if consumer == nil {
+			logger.L(constant.Name).Debug("no consumer is assigned",
+				zap.String("source", edc.ContractId), zap.Any("event", edc))
+		}
+
+		if edc.State == 1 {
+			go func() {
+				err := consumer.ConsumeInputEvent(edc.ContractId, edc.Event)
+				if err != nil {
+					logger.L(constant.Name).Error("error while sending input event data to consumer",
+						zap.String("source", edc.ContractId))
+				}
+			}()
+		}
+
+		if edc.State == 2 {
+			go func() {
+				err := consumer.ConsumeOutputEvent(edc.ContractId, edc.Event)
+				if err != nil {
+					logger.L(constant.Name).Error("error while sending output event data to consumer",
+						zap.String("source", edc.ContractId))
+				}
+			}()
+		}
+	}
 }
 
 func (o *One) Run() {
@@ -211,36 +321,44 @@ func (o *One) Run() {
 
 	idleChan := make(chan struct{})
 
+	// EVENT DISPATCHER
+	go o.EventDispatcher()
+
+	// SHUTDOWN HANDLER
 	go func() {
 		signChan := make(chan os.Signal, 1)
 		signal.Notify(signChan, os.Interrupt, syscall.SIGTERM)
 		sig := <-signChan
+		o.eventDataChannel <- EventData{State: 0}
 		logger.L(constant.Name).Info("shutdown signal received",
 			zap.String("signal", sig.String()))
 
 		logger.L(constant.Name).Info("preparing for shutdown")
-		logger.L(constant.Name).Info("closing all triggers")
+		logger.L(constant.Name).Info("closing all triggersCapability")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		for _, t := range o.triggers {
+		for _, t := range o.triggersCapability {
 			err := t.Stop(ctx)
 			if err != nil {
 				logger.L(constant.Name).Error(err.Error())
 			}
 		}
 
-		logger.L(constant.Name).Info("closed all triggers")
+		logger.L(constant.Name).Info("closed all triggersCapability")
+
+		// close event data channel
+		close(o.eventDataChannel)
 
 		// Actual shutdown trigger.
 		close(idleChan)
 	}()
 
-	for _, t := range o.triggers {
+	for _, t := range o.triggersCapability {
 		trigger := t
 
-		// start all triggers
+		// start all triggersCapability
 		go func() {
 			err := trigger.Start(context.TODO())
 			if err != nil {
@@ -249,7 +367,7 @@ func (o *One) Run() {
 		}()
 	}
 
-	logger.L(constant.Name).Info("all triggers are executed")
+	logger.L(constant.Name).Info("all triggersCapability are executed")
 	elapsed := time.Since(timerStart)
 
 	logger.L(constant.Name).Info("run execution time", zap.Duration("seconds", elapsed))
