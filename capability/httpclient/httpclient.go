@@ -260,3 +260,20 @@ func (h *HTTPClient) Do(ctx context.Context, method string, metadata *model.Meta
 func init() {
 	registry.GlobalRegistry().AddCapability(&HTTPClient{})
 }
+
+// GetHttpClient returns http client capability
+func GetHttpClient(registry iface.ICapabilityRegistry) *HTTPClient {
+	c := registry.Capability("abesh:httpclient")
+
+	if c == nil {
+		return nil
+	}
+
+	c2, ok := c.(*HTTPClient)
+
+	if !ok {
+		return nil
+	}
+
+	return c2
+}

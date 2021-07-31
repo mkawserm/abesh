@@ -3,6 +3,7 @@ package echo
 import (
 	"context"
 	"errors"
+	httpclient2 "github.com/mkawserm/abesh/capability/httpclient"
 	"github.com/mkawserm/abesh/constant"
 	"github.com/mkawserm/abesh/iface"
 	"github.com/mkawserm/abesh/model"
@@ -54,7 +55,7 @@ func (e *ExHttpClient) New() iface.ICapability {
 }
 
 func (e *ExHttpClient) Serve(ctx context.Context, registry iface.ICapabilityRegistry, input *model.Event) (*model.Event, error) {
-	httpclient := utility.GetHttpClient(registry)
+	httpclient := httpclient2.GetHttpClient(registry)
 
 	if httpclient == nil {
 		return nil, ErrHTTPClientNotFound
