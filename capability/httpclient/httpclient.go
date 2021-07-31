@@ -190,8 +190,8 @@ func (h *HTTPClient) Setup() error {
 	}
 
 	transport := &http.Transport{
-		DialContext:         dialer.DialContext,
-		DialTLSContext:      dialer.DialContext,
+		DialContext: dialer.DialContext,
+		//DialTLSContext:      dialer.DialContext,
 		TLSHandshakeTimeout: h.mTLSHandshakeTimeout,
 
 		DisableKeepAlives:   h.mDisableKeepAlive,
