@@ -50,6 +50,13 @@ services:
           method: "GET"
           path: "/httpclient"
 
+  - contract_id: "abesh:ex_err"
+    triggers:
+      - contract_id: "abesh:httpserver"
+        values:
+          method: "GET"
+          path: "/err"
+
 consumers:
   - source: "abesh:ex_echo"
     sink: "abesh:ex_event_consumer"
