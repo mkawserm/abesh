@@ -15,6 +15,7 @@ func GenerateOutputEvent(inputMetadata *Metadata,
 	statusCode uint32,
 	typeUrl string,
 	data []byte) *Event {
+
 	oE := &Event{TypeUrl: typeUrl, Value: data}
 
 	if inputMetadata != nil {
