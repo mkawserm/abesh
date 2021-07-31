@@ -3,7 +3,6 @@ package echo
 import (
 	"context"
 	"errors"
-	httpclient2 "github.com/mkawserm/abesh/capability/httpclient"
 	"github.com/mkawserm/abesh/constant"
 	"github.com/mkawserm/abesh/iface"
 	"github.com/mkawserm/abesh/model"
@@ -13,7 +12,6 @@ import (
 )
 
 var ErrHTTPClientNotFound = errors.New("abesh:httpclient not found")
-var ErrInvalidCapability = errors.New("invalid capability")
 
 type ExHttpClient struct {
 	mValues map[string]string
@@ -56,15 +54,10 @@ func (e *ExHttpClient) New() iface.ICapability {
 }
 
 func (e *ExHttpClient) Serve(ctx context.Context, registry iface.ICapabilityRegistry, input *model.Event) (*model.Event, error) {
-	httpclientCapability := registry.Capability("abesh:httpclient")
+	httpclient := utility.GetHttpClient(registry)
 
-	if httpclientCapability == nil {
+	if httpclient == nil {
 		return nil, ErrHTTPClientNotFound
-	}
-
-	httpclient, ok := httpclientCapability.(*httpclient2.HTTPClient)
-	if !ok {
-		return nil, ErrInvalidCapability
 	}
 
 	resp, err := httpclient.Get(ctx, input.Metadata, map[string]string{"Content-Type": "application/json"}, e.mUrl)
