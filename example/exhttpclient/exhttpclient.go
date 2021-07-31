@@ -75,20 +75,7 @@ func (e *ExHttpClient) Serve(ctx context.Context, registry iface.ICapabilityRegi
 		return nil, err
 	}
 
-	m := &model.Metadata{
-		Headers:        map[string]string{"Content-Type": "application/json"},
-		ContractIdList: []string{e.ContractId()},
-		StatusCode:     200,
-		Status:         "OK",
-	}
-
-	outputEvent := &model.Event{
-		Metadata: m,
-		TypeUrl:  "application/json",
-		Value:    data,
-	}
-
-	return outputEvent, nil
+	return model.GenerateOutputEvent(input.Metadata, e.ContractId(), "OK", 200, "application/json", data), nil
 }
 
 func init() {
