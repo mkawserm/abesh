@@ -20,6 +20,20 @@ func (v ConfigMap) StringList(key string, sep string, defaultValue []string) []s
 	return defaultValue
 }
 
+func (v ConfigMap) StringMap(key string, defaultValue ConfigMap) ConfigMap {
+	if o, ok := v[key]; ok {
+		data := make(ConfigMap)
+		for _, v := range strings.Split(o, ";") {
+			sd := strings.Split(v, "=")
+			if len(sd) == 2 {
+				data[strings.TrimSpace(sd[0])] = strings.TrimSpace(sd[1])
+			}
+		}
+		return data
+	}
+	return defaultValue
+}
+
 func (v ConfigMap) Bytes(key string, defaultValue []byte) []byte {
 	if o, ok := v[key]; ok {
 		return []byte(o)
