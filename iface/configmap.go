@@ -2,12 +2,20 @@ package iface
 
 import (
 	"strconv"
+	"strings"
 	"time"
 )
 
 func (v ConfigMap) String(key string, defaultValue string) string {
 	if o, ok := v[key]; ok {
 		return o
+	}
+	return defaultValue
+}
+
+func (v ConfigMap) StringList(key string, sep string, defaultValue []string) []string {
+	if o, ok := v[key]; ok {
+		return strings.Split(o, sep)
 	}
 	return defaultValue
 }
@@ -139,6 +147,17 @@ func (v ConfigMap) Uint64(key string, defaultValue uint64) uint64 {
 func (v ConfigMap) Duration(key string, defaultValue time.Duration) time.Duration {
 	if o, ok := v[key]; ok {
 		val, err := time.ParseDuration(o)
+		if err != nil {
+			return defaultValue
+		}
+		return val
+	}
+	return defaultValue
+}
+
+func (v ConfigMap) Time(key string, defaultValue time.Time) time.Time {
+	if o, ok := v[key]; ok {
+		val, err := time.Parse(time.RFC3339, o)
 		if err != nil {
 			return defaultValue
 		}
