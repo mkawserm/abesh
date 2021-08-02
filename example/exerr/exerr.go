@@ -31,7 +31,7 @@ func (e *ExErr) ContractId() string {
 	return "abesh:ex_err"
 }
 
-func (e *ExErr) Values() map[string]string {
+func (e *ExErr) GetConfigMap() iface.ConfigMap {
 	return e.mValues
 }
 
@@ -39,7 +39,7 @@ func (e *ExErr) Setup() error {
 	return nil
 }
 
-func (e *ExErr) SetValues(values map[string]string) error {
+func (e *ExErr) SetConfigMap(values iface.ConfigMap) error {
 	e.mValues = values
 
 	return nil

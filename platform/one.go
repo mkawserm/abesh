@@ -96,7 +96,7 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 			newCapability := capability.New()
 			newCapabilityTrigger := newCapability.(iface.ITrigger)
 
-			err = newCapabilityTrigger.SetValues(v.Values)
+			err = newCapabilityTrigger.SetConfigMap(v.Values)
 			if err != nil {
 				return err
 			}
@@ -116,7 +116,7 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 			newCapability := capability.New()
 			newCapabilityAuthorizer := newCapability.(iface.IAuthorizer)
 
-			err = newCapabilityAuthorizer.SetValues(v.Values)
+			err = newCapabilityAuthorizer.SetConfigMap(v.Values)
 			if err != nil {
 				return err
 			}
@@ -131,7 +131,7 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 			newCapability := capability.New()
 			newCapabilityConsumer := newCapability.(iface.IConsumer)
 
-			err = newCapabilityConsumer.SetValues(v.Values)
+			err = newCapabilityConsumer.SetConfigMap(v.Values)
 			if err != nil {
 				return err
 			}
@@ -145,7 +145,7 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 		} else {
 			newCapability := capability.New()
 
-			err = newCapability.SetValues(v.Values)
+			err = newCapability.SetConfigMap(v.Values)
 			if err != nil {
 				return err
 			}
@@ -241,7 +241,7 @@ func (o *One) SetupServices(manifest *model.Manifest) error {
 			return ErrCapabilityCategoryIsNotService
 		}
 
-		err = service.SetValues(s.Values)
+		err = service.SetConfigMap(s.Values)
 		if err != nil {
 			return err
 		}

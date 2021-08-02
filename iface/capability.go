@@ -1,15 +1,17 @@
 package iface
 
+type ConfigMap map[string]string
+
 type ICapability interface {
 	Name() string
 	Version() string
 
 	Category() string
 	ContractId() string
-	Values() map[string]string
+	GetConfigMap() ConfigMap
 
 	Setup() error
-	SetValues(map[string]string) error
+	SetConfigMap(ConfigMap) error
 
 	New() ICapability
 }

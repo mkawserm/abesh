@@ -29,7 +29,7 @@ type HTTPServer struct {
 	mPort                     string
 	mRequestTimeout           time.Duration
 	mDefault404HandlerEnabled bool
-	mValues                   map[string]string
+	mValues                   iface.ConfigMap
 
 	mHttpServer       *http.Server
 	mHttpServerMux    *http.ServeMux
@@ -52,11 +52,11 @@ func (h *HTTPServer) ContractId() string {
 	return "abesh:httpserver"
 }
 
-func (h *HTTPServer) Values() map[string]string {
+func (h *HTTPServer) GetConfigMap() iface.ConfigMap {
 	return h.mValues
 }
 
-func (h *HTTPServer) SetValues(values map[string]string) error {
+func (h *HTTPServer) SetConfigMap(values iface.ConfigMap) error {
 	h.mValues = values
 
 	if host, ok := values["host"]; ok {

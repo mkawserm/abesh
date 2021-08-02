@@ -15,7 +15,7 @@ import (
 var ErrHTTPClientNotFound = errors.New("abesh:httpclient not found")
 
 type ExHttpClient struct {
-	mValues map[string]string
+	mValues iface.ConfigMap
 	mUrl    string
 }
 
@@ -35,7 +35,7 @@ func (e *ExHttpClient) ContractId() string {
 	return "abesh:ex_httpclient"
 }
 
-func (e *ExHttpClient) Values() map[string]string {
+func (e *ExHttpClient) GetConfigMap() iface.ConfigMap {
 	return e.mValues
 }
 
@@ -43,7 +43,7 @@ func (e *ExHttpClient) Setup() error {
 	return nil
 }
 
-func (e *ExHttpClient) SetValues(values map[string]string) error {
+func (e *ExHttpClient) SetConfigMap(values iface.ConfigMap) error {
 	e.mValues = values
 
 	e.mUrl = utility.GetValue(e.mValues, "url", "https://jsonip.com")

@@ -9,7 +9,7 @@ import (
 )
 
 type Echo struct {
-	mValues map[string]string
+	mValues iface.ConfigMap
 }
 
 func (e *Echo) Name() string {
@@ -28,7 +28,7 @@ func (e *Echo) ContractId() string {
 	return "abesh:ex_echo"
 }
 
-func (e *Echo) Values() map[string]string {
+func (e *Echo) GetConfigMap() iface.ConfigMap {
 	return e.mValues
 }
 
@@ -36,7 +36,7 @@ func (e *Echo) Setup() error {
 	return nil
 }
 
-func (e *Echo) SetValues(values map[string]string) error {
+func (e *Echo) SetConfigMap(values iface.ConfigMap) error {
 	e.mValues = values
 
 	return nil

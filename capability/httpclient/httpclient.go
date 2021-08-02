@@ -16,7 +16,7 @@ import (
 )
 
 type HTTPClient struct {
-	mValues map[string]string
+	mValues iface.ConfigMap
 
 	mDialerTimeout       time.Duration
 	mTLSHandshakeTimeout time.Duration
@@ -56,11 +56,11 @@ func (h *HTTPClient) ContractId() string {
 	return "abesh:httpclient"
 }
 
-func (h *HTTPClient) Values() map[string]string {
+func (h *HTTPClient) GetConfigMap() iface.ConfigMap {
 	return h.mValues
 }
 
-func (h *HTTPClient) SetValues(values map[string]string) error {
+func (h *HTTPClient) SetConfigMap(values iface.ConfigMap) error {
 	h.mValues = values
 
 	var t time.Duration
