@@ -39,5 +39,6 @@ var abeshAuthors = &cobra.Command{
 }
 
 func init()  {
-	abeshCMD.AddCommand(abeshVersion, abeshAuthors)
+	//abeshCMD.AddCommand(abeshVersion, abeshAuthors)
+	rootCMD.AddCommand(abeshVersion, abeshAuthors)
 }
