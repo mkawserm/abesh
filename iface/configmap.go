@@ -179,3 +179,14 @@ func (v ConfigMap) Time(key string, defaultValue time.Time) time.Time {
 	}
 	return defaultValue
 }
+
+func (v ConfigMap) Bool(key string, defaultValue bool) bool {
+	if o, ok := v[key]; ok {
+		val, err := strconv.ParseBool(o)
+		if err != nil {
+			return defaultValue
+		}
+		return val
+	}
+	return defaultValue
+}
