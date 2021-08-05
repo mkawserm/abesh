@@ -13,6 +13,7 @@ const CategoryDatabase Category = "database"
 const CategoryConsumer Category = "consumer"
 const CategoryCacheStore Category = "cachestore"
 const CategoryAuthorizer Category = "authorizer"
+const CategoryVM Category = "vm"
 
 // CategoryString returns category name
 func CategoryString(category Category) string {
