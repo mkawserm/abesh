@@ -24,5 +24,9 @@ message Metadata {
   uint32 status_code = 9;
   string status = 10;
 
+  // for nats and other event driven system
+  string subscription_subject = 11;
+  string reply_subject = 12;
+
   google.protobuf.Any data = 500;
 }
