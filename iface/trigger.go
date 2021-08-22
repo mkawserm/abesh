@@ -13,7 +13,7 @@ type ITrigger interface {
 
 	AddService(authorizationHandler AuthorizationHandler,
 		authorizationExpression string,
-		triggerValues map[string]string,
+		triggerValues ConfigMap,
 		capabilityRegistry ICapabilityRegistry,
 		service IService) error
 }

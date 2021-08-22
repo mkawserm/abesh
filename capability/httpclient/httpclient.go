@@ -10,7 +10,6 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -63,123 +62,20 @@ func (h *HTTPClient) GetConfigMap() iface.ConfigMap {
 func (h *HTTPClient) SetConfigMap(values iface.ConfigMap) error {
 	h.mValues = values
 
-	var t time.Duration
-	var i int
-	var i64 int64
-	var b bool
-	var err error
-
-	// dialer timeout
-	t, err = time.ParseDuration(utility.GetValue(h.mValues, "dialer_timeout", "5s"))
-	if err != nil {
-		h.mDialerTimeout = 5 * time.Second
-	} else {
-		h.mDialerTimeout = t
-	}
-
-	//tls handshake timeout
-	t, err = time.ParseDuration(utility.GetValue(h.mValues, "tls_handshake_timeout", "5s"))
-	if err != nil {
-		h.mTLSHandshakeTimeout = 5 * time.Second
-	} else {
-		h.mTLSHandshakeTimeout = t
-	}
-
-	//request timeout
-	t, err = time.ParseDuration(utility.GetValue(h.mValues, "request_timeout", "10s"))
-	if err != nil {
-		h.mTLSHandshakeTimeout = 10 * time.Second
-	} else {
-		h.mTLSHandshakeTimeout = t
-	}
-
-	// disable keep alive
-	b, err = strconv.ParseBool(utility.GetValue(h.mValues, "disable_keep_alive", "false"))
-	if err != nil {
-		h.mDisableKeepAlive = false
-	} else {
-		h.mDisableKeepAlive = b
-	}
-
-	// disable compression
-	b, err = strconv.ParseBool(utility.GetValue(h.mValues, "disable_compression", "false"))
-	if err != nil {
-		h.mDisableCompression = false
-	} else {
-		h.mDisableCompression = b
-	}
-
-	// max idle connections
-	i, err = strconv.Atoi(utility.GetValue(h.mValues, "max_idle_connections", "100"))
-	if err != nil {
-		h.mMaxIdleConnections = 100
-	} else {
-		h.mMaxIdleConnections = i
-	}
-
-	// max idle connections per host
-	i, err = strconv.Atoi(utility.GetValue(h.mValues, "max_idle_connections_per_host", "10"))
-	if err != nil {
-		h.mMaxIdleConnectionsPerHost = 10
-	} else {
-		h.mMaxIdleConnectionsPerHost = i
-	}
-
-	// max connections per host
-	i, err = strconv.Atoi(utility.GetValue(h.mValues, "max_connections_per_host", "1000"))
-	if err != nil {
-		h.mMaxConnectionsPerHost = 1000
-	} else {
-		h.mMaxConnectionsPerHost = i
-	}
-
-	// idle connection timeout
-	t, err = time.ParseDuration(utility.GetValue(h.mValues, "idle_connection_timeout", "5s"))
-	if err != nil {
-		h.mIdleConnectionTimeout = 5 * time.Second
-	} else {
-		h.mIdleConnectionTimeout = t
-	}
-
-	// response header timeout
-	t, err = time.ParseDuration(utility.GetValue(h.mValues, "response_header_timeout", "0s"))
-	if err != nil {
-		h.mResponseHeaderTimeout = 0 * time.Second
-	} else {
-		h.mResponseHeaderTimeout = t
-	}
-
-	// expect continue timeout
-	t, err = time.ParseDuration(utility.GetValue(h.mValues, "expect_continue_timeout", "0s"))
-	if err != nil {
-		h.mExpectContinueTimeout = 0 * time.Second
-	} else {
-		h.mExpectContinueTimeout = t
-	}
-
-	// max response header bytes
-	i64, err = strconv.ParseInt(utility.GetValue(h.mValues, "max_response_header_bytes", "0"), 10, 64)
-	if err != nil {
-		h.mMaxResponseHeaderBytes = 0
-	} else {
-		h.mMaxResponseHeaderBytes = i64
-	}
-
-	// write buffer size
-	i, err = strconv.Atoi(utility.GetValue(h.mValues, "write_buffer_size", "4096"))
-	if err != nil {
-		h.mWriteBufferSize = 4096
-	} else {
-		h.mWriteBufferSize = i
-	}
-
-	// read buffer size
-	i, err = strconv.Atoi(utility.GetValue(h.mValues, "read_buffer_size", "4096"))
-	if err != nil {
-		h.mReadBufferSize = 4096
-	} else {
-		h.mReadBufferSize = i
-	}
+	h.mDialerTimeout = h.mValues.Duration("dialer_timeout", 5*time.Second)
+	h.mTLSHandshakeTimeout = h.mValues.Duration("tls_handshake_timeout", 5*time.Second)
+	h.mRequestTimeout = h.mValues.Duration("request_timeout", 10*time.Second)
+	h.mDisableKeepAlive = h.mValues.Bool("disable_keep_alive", false)
+	h.mDisableCompression = h.mValues.Bool("disable_compression", false)
+	h.mMaxIdleConnections = h.mValues.Int("max_idle_connections", 100)
+	h.mMaxIdleConnectionsPerHost = h.mValues.Int("max_idle_connections_per_host", 10)
+	h.mMaxConnectionsPerHost = h.mValues.Int("max_connections_per_host", 1000)
+	h.mIdleConnectionTimeout = h.mValues.Duration("idle_connection_timeout", 5*time.Second)
+	h.mResponseHeaderTimeout = h.mValues.Duration("response_header_timeout", 0*time.Second)
+	h.mExpectContinueTimeout = h.mValues.Duration("expect_continue_timeout", 0*time.Second)
+	h.mMaxResponseHeaderBytes = h.mValues.Int64("max_response_header_bytes", 0)
+	h.mWriteBufferSize = h.mValues.Int("write_buffer_size", 4096)
+	h.mReadBufferSize = h.mValues.Int("read_buffer_size", 4096)
 
 	return nil
 }
