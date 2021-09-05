@@ -3,6 +3,7 @@ package httpserver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/mkawserm/abesh/constant"
 	"github.com/mkawserm/abesh/iface"
 	"github.com/mkawserm/abesh/logger"
@@ -305,6 +306,15 @@ func (h *HTTPServer) AddService(
 			logger.L(h.ContractId()).Debug("request completed")
 			elapsed := time.Since(timerStart)
 			logger.L(h.ContractId()).Debug("request execution time", zap.Duration("seconds", elapsed))
+		}()
+
+		defer func() {
+			if r := recover(); r != nil {
+				logger.L(h.ContractId()).Error("recovering from panic")
+				logger.L(h.ContractId()).Error(fmt.Sprintf("%v", r))
+				h.s500m(writer, nil)
+				return
+			}
 		}()
 
 		h.debugMessage(request)
