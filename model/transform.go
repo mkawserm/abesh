@@ -22,6 +22,13 @@ func GenerateOutputEvent(inputMetadata *Metadata,
 		oE.Metadata = CloneMetadata(inputMetadata)
 		if oE.Metadata != nil && oE.Metadata.Headers != nil {
 			oE.Metadata.Headers["Content-Type"] = typeUrl
+
+			if _, found := oE.Metadata.Headers["Content-Length"]; found {
+				delete(oE.Metadata.Headers, "Content-Length")
+			}
+			if _, found := oE.Metadata.Headers["content-length"]; found {
+				delete(oE.Metadata.Headers, "content-length")
+			}
 		}
 
 		if oE.Metadata != nil {
