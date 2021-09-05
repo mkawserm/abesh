@@ -311,8 +311,7 @@ func (h *HTTPServer) AddService(
 		defer func() {
 			if r := recover(); r != nil {
 				logger.L(h.ContractId()).Error("recovering from panic")
-				logger.L(h.ContractId()).Error(fmt.Sprintf("%v", r))
-				h.s500m(writer, nil)
+				h.s500m(writer, fmt.Errorf("%v", r))
 				return
 			}
 		}()
