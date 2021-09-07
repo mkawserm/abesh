@@ -19,9 +19,6 @@ var rootCMD = &cobra.Command{
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	DefaultCMDHandler(rootCMD)
-
-	rootCMD.AddCommand(abeshCMD)
 }
 
 // AddCommand slices to root cmd
@@ -42,6 +39,9 @@ func initConfig() {
 }
 
 func Execute() {
+	DefaultCMDHandler(rootCMD)
+	rootCMD.AddCommand(abeshCMD)
+
 	if err := rootCMD.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

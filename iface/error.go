@@ -4,6 +4,7 @@ import "fmt"
 
 type IError interface {
 	Error() string
+	Message() string
 	ErrorCode() uint32
 	ErrorPrefix() string
 }
@@ -30,4 +31,13 @@ func IsErrorInterfaceOk(iError IError) bool {
 	}
 
 	return true
+}
+
+// Is checks error with target error
+func Is(err, target IError) bool {
+	if err.ErrorCode() == target.ErrorCode() && err.ErrorPrefix() == target.ErrorPrefix() {
+		return true
+	}
+
+	return false
 }
