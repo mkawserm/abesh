@@ -8,10 +8,6 @@ type ICapability interface {
 
 	Category() string
 	ContractId() string
-	GetConfigMap() ConfigMap
-
-	Setup() error
-	SetConfigMap(ConfigMap) error
 
 	New() ICapability
 }
