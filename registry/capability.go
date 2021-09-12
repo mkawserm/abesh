@@ -18,6 +18,10 @@ func (c *CapabilityRegistry) Capability(contractId string) iface.ICapability {
 	return nil
 }
 
+func (c *CapabilityRegistry) Iterator() map[string]iface.ICapability {
+	return c.cr
+}
+
 func NewCapabilityRegistry() *CapabilityRegistry {
 	return &CapabilityRegistry{cr: make(map[string]iface.ICapability)}
 }

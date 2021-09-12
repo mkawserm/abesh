@@ -77,6 +77,44 @@ func (o *One) TransmitOutputEvent(contractId string, event *model.Event) error {
 	return nil
 }
 
+func (o *One) callSetConfigMap(capability iface.ICapability, values map[string]string) error {
+	v, ok := capability.(iface.IConfigMapSetter)
+	logger.L(constant.Name).Debug("callSetConfigMap info",
+		zap.String("contract_id", capability.ContractId()),
+		zap.Bool("ok", ok))
+
+	if ok {
+		return v.SetConfigMap(values)
+	}
+	return nil
+}
+
+func (o *One) callSetCapabilityRegistry(capability iface.ICapability) error {
+	v, ok := capability.(iface.ICapabilityRegistrySetter)
+
+	logger.L(constant.Name).Debug("callSetCapabilityRegistry info",
+		zap.String("contract_id", capability.ContractId()),
+		zap.Bool("ok", ok))
+
+	if ok {
+		return v.SetCapabilityRegistry(o.capabilityRegistry)
+	}
+	return nil
+}
+
+func (o *One) callSetup(capability iface.ICapability) error {
+	v, ok := capability.(iface.ISetup)
+	logger.L(constant.Name).Debug("callSetup info",
+		zap.String("contract_id", capability.ContractId()),
+		zap.Bool("ok", ok))
+
+	if ok {
+		return v.Setup()
+	}
+
+	return nil
+}
+
 func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 	var err error
 
@@ -84,7 +122,9 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 	// separate triggersCapability, authorizersCapability, consumersCapability from other
 	// capabilities
 	for _, v := range manifest.Capabilities {
+
 		capability := registry.GlobalRegistry().GetCapability(v.ContractId)
+
 		if capability == nil {
 			logger.L(constant.Name).Error("capability not found",
 				zap.String("contract_id", v.ContractId),
@@ -92,19 +132,14 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 			return ErrCapabilityNotFound
 		}
 
+		newCapability := capability.New()
+		err = o.callSetConfigMap(newCapability, v.Values)
+		if err != nil {
+			return err
+		}
+
 		if capability.Category() == string(constant.CategoryTrigger) {
-			newCapability := capability.New()
 			newCapabilityTrigger := newCapability.(iface.ITrigger)
-
-			err = newCapabilityTrigger.SetConfigMap(v.Values)
-			if err != nil {
-				return err
-			}
-
-			err = newCapabilityTrigger.Setup()
-			if err != nil {
-				return err
-			}
 
 			err = newCapabilityTrigger.AddEventTransmitter(o)
 			if err != nil {
@@ -113,49 +148,59 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 
 			o.triggersCapability[newCapability.ContractId()] = newCapabilityTrigger
 		} else if capability.Category() == string(constant.CategoryAuthorizer) {
-			newCapability := capability.New()
 			newCapabilityAuthorizer := newCapability.(iface.IAuthorizer)
-
-			err = newCapabilityAuthorizer.SetConfigMap(v.Values)
-			if err != nil {
-				return err
-			}
-
-			err = newCapabilityAuthorizer.Setup()
-			if err != nil {
-				return err
-			}
 
 			o.authorizersCapability[newCapability.ContractId()] = newCapabilityAuthorizer
 		} else if capability.Category() == string(constant.CategoryConsumer) {
-			newCapability := capability.New()
 			newCapabilityConsumer := newCapability.(iface.IConsumer)
-
-			err = newCapabilityConsumer.SetConfigMap(v.Values)
-			if err != nil {
-				return err
-			}
-
-			err = newCapabilityConsumer.Setup()
-			if err != nil {
-				return err
-			}
 
 			o.consumersCapability[newCapability.ContractId()] = newCapabilityConsumer
 		} else {
-			newCapability := capability.New()
-
-			err = newCapability.SetConfigMap(v.Values)
-			if err != nil {
-				return err
-			}
-
-			err = newCapability.Setup()
-			if err != nil {
-				return err
-			}
-
 			o.capabilityRegistry.RegisterCapability(newCapability)
+		}
+	}
+
+	// for triggers
+	for _, c := range o.triggersCapability {
+		if errLocal := o.callSetCapabilityRegistry(c); errLocal != nil {
+			return errLocal
+		}
+
+		if errLocal := o.callSetup(c); errLocal != nil {
+			return errLocal
+		}
+	}
+
+	// for authorizers
+	for _, c := range o.authorizersCapability {
+		if errLocal := o.callSetCapabilityRegistry(c); errLocal != nil {
+			return errLocal
+		}
+
+		if errLocal := o.callSetup(c); errLocal != nil {
+			return errLocal
+		}
+	}
+
+	// for consumers
+	for _, c := range o.consumersCapability {
+		if errLocal := o.callSetCapabilityRegistry(c); errLocal != nil {
+			return errLocal
+		}
+
+		if errLocal := o.callSetup(c); errLocal != nil {
+			return errLocal
+		}
+	}
+
+	// other capabilities
+	for _, c := range o.capabilityRegistry.Iterator() {
+		if errLocal := o.callSetCapabilityRegistry(c); errLocal != nil {
+			return errLocal
+		}
+
+		if errLocal := o.callSetup(c); errLocal != nil {
+			return errLocal
 		}
 	}
 
@@ -241,14 +286,16 @@ func (o *One) SetupServices(manifest *model.Manifest) error {
 			return ErrCapabilityCategoryIsNotService
 		}
 
-		err = service.SetConfigMap(s.Values)
-		if err != nil {
-			return err
+		if errLocal := o.callSetConfigMap(service, s.Values); errLocal != nil {
+			return errLocal
 		}
 
-		err = service.Setup()
-		if err != nil {
-			return err
+		if errLocal := o.callSetCapabilityRegistry(service); errLocal != nil {
+			return errLocal
+		}
+
+		if errLocal := o.callSetup(service); errLocal != nil {
+			return errLocal
 		}
 
 		logger.L(constant.Name).Debug("configuring triggersCapability", zap.String("contract_id", service.ContractId()))
