@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+type ConfigMap map[string]string
+
 func (v ConfigMap) String(key string, defaultValue string) string {
 	if o, ok := v[key]; ok {
 		return o
