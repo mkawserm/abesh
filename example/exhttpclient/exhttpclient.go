@@ -15,8 +15,9 @@ import (
 var ErrHTTPClientNotFound = errors.New("abesh:httpclient not found")
 
 type ExHttpClient struct {
-	mValues iface.ConfigMap
-	mUrl    string
+	mValues     iface.ConfigMap
+	mUrl        string
+	mHttpClient *httpclient2.HTTPClient
 }
 
 func (e *ExHttpClient) Name() string {
@@ -43,6 +44,15 @@ func (e *ExHttpClient) Setup() error {
 	return nil
 }
 
+func (e *ExHttpClient) SetCapabilityRegistry(registry iface.ICapabilityRegistry) error {
+	e.mHttpClient = httpclient2.GetHttpClient(registry)
+	if e.mHttpClient == nil {
+		return ErrHTTPClientNotFound
+	}
+
+	return nil
+}
+
 func (e *ExHttpClient) SetConfigMap(values iface.ConfigMap) error {
 	e.mValues = values
 
@@ -54,14 +64,9 @@ func (e *ExHttpClient) New() iface.ICapability {
 	return &ExHttpClient{}
 }
 
-func (e *ExHttpClient) Serve(ctx context.Context, registry iface.ICapabilityRegistry, input *model.Event) (*model.Event, error) {
-	httpclient := httpclient2.GetHttpClient(registry)
+func (e *ExHttpClient) Serve(ctx context.Context, input *model.Event) (*model.Event, error) {
 
-	if httpclient == nil {
-		return nil, ErrHTTPClientNotFound
-	}
-
-	resp, err := httpclient.Get(ctx, input.Metadata, map[string]string{"Content-Type": "application/json"}, e.mUrl)
+	resp, err := e.mHttpClient.Get(ctx, input.Metadata, map[string]string{"Content-Type": "application/json"}, e.mUrl)
 
 	if err != nil {
 		return nil, err

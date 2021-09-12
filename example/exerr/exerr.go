@@ -49,7 +49,7 @@ func (e *ExErr) New() iface.ICapability {
 	return &ExErr{}
 }
 
-func (e *ExErr) Serve(_ context.Context, _ iface.ICapabilityRegistry, input *model.Event) (*model.Event, error) {
+func (e *ExErr) Serve(_ context.Context, input *model.Event) (*model.Event, error) {
 	return nil, ErrNothing
 }
 

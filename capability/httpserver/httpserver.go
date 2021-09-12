@@ -279,7 +279,6 @@ func (h *HTTPServer) AddService(
 	authorizationHandler iface.AuthorizationHandler,
 	authorizationExpression string,
 	triggerValues iface.ConfigMap,
-	capabilityRegistry iface.ICapabilityRegistry,
 	service iface.IService) error {
 
 	var method string
@@ -381,7 +380,7 @@ func (h *HTTPServer) AddService(
 				}
 			} else {
 				go func() {
-					event, errInner := service.Serve(nCtx, capabilityRegistry, inputEvent)
+					event, errInner := service.Serve(nCtx, inputEvent)
 					ch <- EventResponse{Event: event, Error: errInner}
 				}()
 			}

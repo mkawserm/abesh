@@ -14,6 +14,5 @@ type ITrigger interface {
 	AddService(authorizationHandler AuthorizationHandler,
 		authorizationExpression string,
 		triggerValues ConfigMap,
-		capabilityRegistry ICapabilityRegistry,
 		service IService) error
 }

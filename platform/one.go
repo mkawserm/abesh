@@ -234,7 +234,6 @@ func (o *One) SetupTriggers(service iface.IService, triggerManifests []*model.Tr
 		err = trigger.AddService(authorizationHandler,
 			expression,
 			t.Values,
-			o.capabilityRegistry,
 			service)
 
 		if err != nil {
