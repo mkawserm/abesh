@@ -40,7 +40,23 @@ type One struct {
 	eventDataChannel EventDataChannel
 }
 
-func (o *One) GetConsumers(contractId string) []iface.IConsumer {
+func (o *One) GetTriggersCapability() map[string]iface.ITrigger {
+	return o.triggersCapability
+}
+
+func (o *One) GetAuthorizersCapability() map[string]iface.IAuthorizer {
+	return o.authorizersCapability
+}
+
+func (o *One) GetConsumersCapability() map[string]iface.IConsumer {
+	return o.consumersCapability
+}
+
+func (o *One) GetCapabilityRegistry() *registry.CapabilityRegistry {
+	return o.capabilityRegistry
+}
+
+func (o *One) getConsumers(contractId string) []iface.IConsumer {
 	var ok bool
 	var v []string
 	var c []iface.IConsumer
@@ -115,7 +131,7 @@ func (o *One) callSetup(capability iface.ICapability) error {
 	return nil
 }
 
-func (o *One) SetupCapabilities(manifest *model.Manifest) error {
+func (o *One) setupCapabilities(manifest *model.Manifest) error {
 	var err error
 
 	// configure all capability
@@ -207,7 +223,7 @@ func (o *One) SetupCapabilities(manifest *model.Manifest) error {
 	return nil
 }
 
-func (o *One) SetupTriggers(service iface.IService, triggerManifests []*model.TriggerManifest) error {
+func (o *One) setupTriggers(service iface.IService, triggerManifests []*model.TriggerManifest) error {
 	var err error
 
 	for _, t := range triggerManifests {
@@ -244,7 +260,7 @@ func (o *One) SetupTriggers(service iface.IService, triggerManifests []*model.Tr
 	return nil
 }
 
-func (o *One) SetupConsumers(manifest *model.Manifest) error {
+func (o *One) setupConsumers(manifest *model.Manifest) error {
 	for _, cm := range manifest.Consumers {
 		v, ok := o.sourceSinkMap[cm.Source]
 
@@ -268,7 +284,7 @@ func (o *One) SetupConsumers(manifest *model.Manifest) error {
 	return nil
 }
 
-func (o *One) SetupServices(manifest *model.Manifest) error {
+func (o *One) setupServices(manifest *model.Manifest) error {
 	var err error
 
 	//Configure services
@@ -298,7 +314,7 @@ func (o *One) SetupServices(manifest *model.Manifest) error {
 		}
 
 		logger.L(constant.Name).Debug("configuring triggersCapability", zap.String("contract_id", service.ContractId()))
-		err = o.SetupTriggers(service, s.Triggers)
+		err = o.setupTriggers(service, s.Triggers)
 		if err != nil {
 			return err
 		}
@@ -320,19 +336,19 @@ func (o *One) Setup(manifest *model.Manifest) error {
 	o.eventDataChannel = make(EventDataChannel, conf.EnvironmentConfigIns().EventBufferSize)
 
 	logger.L(constant.Name).Debug("configuring capabilities")
-	err = o.SetupCapabilities(manifest)
+	err = o.setupCapabilities(manifest)
 	if err != nil {
 		return err
 	}
 
 	logger.L(constant.Name).Debug("configuring services")
-	err = o.SetupServices(manifest)
+	err = o.setupServices(manifest)
 	if err != nil {
 		return err
 	}
 
 	logger.L(constant.Name).Debug("configuring consumers")
-	err = o.SetupConsumers(manifest)
+	err = o.setupConsumers(manifest)
 	if err != nil {
 		return err
 	}
@@ -343,14 +359,14 @@ func (o *One) Setup(manifest *model.Manifest) error {
 	return nil
 }
 
-func (o *One) EventDispatcher() {
+func (o *One) eventDispatcher() {
 	for {
 		edc := <-o.eventDataChannel
 		if edc.State == 0 {
 			break
 		}
 
-		consumers := o.GetConsumers(edc.ContractId)
+		consumers := o.getConsumers(edc.ContractId)
 		if consumers == nil {
 			logger.L(constant.Name).Debug("no consumer is assigned",
 				zap.String("source", edc.ContractId), zap.Any("event", edc))
@@ -391,7 +407,7 @@ func (o *One) Run() {
 	idleChan := make(chan struct{})
 
 	// EVENT DISPATCHER
-	go o.EventDispatcher()
+	go o.eventDispatcher()
 
 	// SHUTDOWN HANDLER
 	go func() {
