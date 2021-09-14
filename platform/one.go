@@ -52,7 +52,7 @@ func (o *One) GetConsumersCapability() map[string]iface.IConsumer {
 	return o.consumersCapability
 }
 
-func (o *One) GetCapabilityRegistry() *registry.CapabilityRegistry {
+func (o *One) GetCapabilityRegistry() iface.ICapabilityRegistryIterator {
 	return o.capabilityRegistry
 }
 

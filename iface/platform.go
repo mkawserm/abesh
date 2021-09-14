@@ -2,7 +2,6 @@ package iface
 
 import (
 	"github.com/mkawserm/abesh/model"
-	"github.com/mkawserm/abesh/registry"
 )
 
 type IPlatformSetup interface {
@@ -26,7 +25,7 @@ type IPlatformConsumersCapabilityGetter interface {
 }
 
 type IPlatformCapabilityRegistryGetter interface {
-	GetCapabilityRegistry() *registry.CapabilityRegistry
+	GetCapabilityRegistry() ICapabilityRegistryIterator
 }
 
 type IPlatform interface {
