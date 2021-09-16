@@ -25,7 +25,7 @@ type IPlatformConsumersCapabilityGetter interface {
 }
 
 type IPlatformCapabilityRegistryGetter interface {
-	GetCapabilityRegistry() ICapabilityRegistryIterator
+	GetCapabilityRegistry() map[string]ICapability
 }
 
 type IPlatform interface {

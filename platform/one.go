@@ -52,8 +52,8 @@ func (o *One) GetConsumersCapability() map[string]iface.IConsumer {
 	return o.consumersCapability
 }
 
-func (o *One) GetCapabilityRegistry() iface.ICapabilityRegistryIterator {
-	return o.capabilityRegistry
+func (o *One) GetCapabilityRegistry() map[string]iface.ICapability {
+	return o.capabilityRegistry.Iterator()
 }
 
 func (o *One) getConsumers(contractId string) []iface.IConsumer {
