@@ -158,7 +158,7 @@ func init() {
 }
 
 // GetHttpClient returns http client capability
-func GetHttpClient(registry iface.ICapabilityRegistry) *HTTPClient {
+func GetHttpClient(registry iface.ICapabilityRegistry) iface.IHttpClient {
 	c := registry.Capability("abesh:httpclient")
 
 	if c == nil {
