@@ -17,7 +17,7 @@ var ErrHTTPClientNotFound = errors.New("abesh:httpclient not found")
 type ExHttpClient struct {
 	mValues     iface.ConfigMap
 	mUrl        string
-	mHttpClient *httpclient2.HTTPClient
+	mHttpClient iface.IHttpClient
 }
 
 func (e *ExHttpClient) Name() string {
