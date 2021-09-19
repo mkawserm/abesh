@@ -7,3 +7,7 @@ type IConfigMapSetter interface {
 type ICapabilityRegistrySetter interface {
 	SetCapabilityRegistry(capabilityRegistry ICapabilityRegistry) error
 }
+
+type ISetAuthorizerCapabilityMap interface {
+	SetAuthorizerCapabilityMap(authorizerMap map[string]IAuthorizer) error
+}

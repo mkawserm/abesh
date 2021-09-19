@@ -20,6 +20,7 @@ var ErrCapabilityNotFound = errors.New("capability is not found in the global re
 var ErrCapabilityCategoryIsNotService = errors.New("capability category is not service")
 var ErrTriggerNotRegistered = errors.New("the requested trigger has not been registered")
 var ErrAuthorizerNotRegistered = errors.New("the requested authorizer has not been registered")
+var ErrCapabilityCategoryIsNotRPC = errors.New("capability category is not rpc")
 
 type EventData struct {
 	State      uint8 /*0 break 1 input 2 output*/
@@ -33,7 +34,9 @@ type One struct {
 	triggersCapability    map[string]iface.ITrigger
 	authorizersCapability map[string]iface.IAuthorizer
 	consumersCapability   map[string]iface.IConsumer
-	capabilityRegistry    *registry.CapabilityRegistry
+	rpcsCapability        map[string]iface.IRPC
+
+	capabilityRegistry *registry.CapabilityRegistry
 
 	sourceSinkMap map[string][]string
 
@@ -55,6 +58,10 @@ func (o *One) GetConsumersCapability() map[string]iface.IConsumer {
 func (o *One) GetCapabilityRegistry() map[string]iface.ICapability {
 	return o.capabilityRegistry.Iterator()
 }
+
+//func (o *One) GetRPCCapability() map[string]iface.IRPC {
+//	return o.rpcsCapability
+//}
 
 func (o *One) getConsumers(contractId string) []iface.IConsumer {
 	var ok bool
@@ -163,6 +170,18 @@ func (o *One) setupCapabilities(manifest *model.Manifest) error {
 			}
 
 			o.triggersCapability[newCapability.ContractId()] = newCapabilityTrigger
+		} else if capability.Category() == string(constant.CategoryRPC) {
+			newCapabilityRPC := newCapability.(iface.IRPC)
+
+			err = newCapabilityRPC.AddEventTransmitter(o)
+			if err != nil {
+				return err
+			}
+
+			o.rpcsCapability[newCapability.ContractId()] = newCapabilityRPC
+		} else if capability.Category() == string(constant.CategoryService) {
+			// skip service
+			continue
 		} else if capability.Category() == string(constant.CategoryAuthorizer) {
 			newCapabilityAuthorizer := newCapability.(iface.IAuthorizer)
 
@@ -208,6 +227,17 @@ func (o *One) setupCapabilities(manifest *model.Manifest) error {
 			return errLocal
 		}
 	}
+
+	// rpcs
+	//for _, c := range o.rpcsCapability {
+	//	if errLocal := o.callSetCapabilityRegistry(c); errLocal != nil {
+	//		return errLocal
+	//	}
+	//
+	//	if errLocal := o.callSetup(c); errLocal != nil {
+	//		return errLocal
+	//	}
+	//}
 
 	// other capabilities
 	for _, c := range o.capabilityRegistry.Iterator() {
@@ -301,6 +331,10 @@ func (o *One) setupServices(manifest *model.Manifest) error {
 			return ErrCapabilityCategoryIsNotService
 		}
 
+		if service.Category() != string(constant.CategoryService) {
+			return ErrCapabilityCategoryIsNotService
+		}
+
 		if errLocal := o.callSetConfigMap(service, s.Values); errLocal != nil {
 			return errLocal
 		}
@@ -323,6 +357,60 @@ func (o *One) setupServices(manifest *model.Manifest) error {
 	return nil
 }
 
+func (o *One) setupRPCAuthorizer(authorizer iface.IAddAuthorizer, manifest *model.RPCAuthorizerManifest) error {
+	return authorizer.AddAuthorizer(manifest.Method, manifest.ContractId, manifest.Expression)
+}
+
+func (o *One) setupRPCS(manifest *model.Manifest) error {
+	// configuring RPCS
+	for _, s := range manifest.RPCS {
+		capability := registry.GlobalRegistry().GetCapability(s.ContractId)
+
+		if capability == nil {
+			return ErrCapabilityNotFound
+		}
+
+		rpc := capability.New().(iface.IRPC)
+
+		if rpc == nil {
+			return ErrCapabilityCategoryIsNotRPC
+		}
+
+		if rpc.Category() != string(constant.CategoryRPC) {
+			return ErrCapabilityCategoryIsNotRPC
+		}
+
+		if errLocal := o.callSetConfigMap(rpc, s.Values); errLocal != nil {
+			return errLocal
+		}
+
+		if errLocal := o.callSetCapabilityRegistry(rpc); errLocal != nil {
+			return errLocal
+		}
+
+		if errLocal := o.callSetup(rpc); errLocal != nil {
+			return errLocal
+		}
+
+		rpcAddAuthorizer := rpc.(iface.IAddAuthorizer)
+		if rpcAddAuthorizer == nil {
+			logger.L(constant.Name).Debug("add authorizer interface is not satisfied so no need to configure authorizers",
+				zap.String("contract_id", rpc.ContractId()))
+			continue
+		}
+
+		logger.L(constant.Name).Debug("configuring authorizers", zap.String("contract_id", rpc.ContractId()))
+		for _, a := range s.Authorizers {
+			if errLocal := o.setupRPCAuthorizer(rpcAddAuthorizer, a); errLocal != nil {
+				return errLocal
+			}
+		}
+		logger.L(constant.Name).Debug("authorizers setup complete", zap.String("contract_id", rpc.ContractId()))
+	}
+
+	return nil
+}
+
 func (o *One) Setup(manifest *model.Manifest) error {
 	timerStart := time.Now()
 	var err error
@@ -330,6 +418,7 @@ func (o *One) Setup(manifest *model.Manifest) error {
 	o.triggersCapability = make(map[string]iface.ITrigger)
 	o.authorizersCapability = make(map[string]iface.IAuthorizer)
 	o.consumersCapability = make(map[string]iface.IConsumer)
+	o.rpcsCapability = make(map[string]iface.IRPC)
 	o.capabilityRegistry = registry.NewCapabilityRegistry()
 
 	o.sourceSinkMap = make(map[string][]string)
@@ -343,6 +432,12 @@ func (o *One) Setup(manifest *model.Manifest) error {
 
 	logger.L(constant.Name).Debug("configuring services")
 	err = o.setupServices(manifest)
+	if err != nil {
+		return err
+	}
+
+	logger.L(constant.Name).Debug("configuring rpcs")
+	err = o.setupRPCS(manifest)
 	if err != nil {
 		return err
 	}
@@ -372,13 +467,17 @@ func (o *One) eventDispatcher() {
 				zap.String("source", edc.ContractId), zap.Any("event", edc))
 		}
 
-		for _, consumer := range consumers {
-			if consumer == nil {
-				continue
-			}
+		for index, _ := range consumers {
+			// NOTE: may have issues regarding
+			// go routine check later
+			i := index
 
 			if edc.State == 1 {
 				go func() {
+					consumer := consumers[i]
+					if consumer == nil {
+						return
+					}
 					err := consumer.ConsumeInputEvent(edc.ContractId, edc.Event)
 					if err != nil {
 						logger.L(constant.Name).Error("error while sending input event data to consumer",
@@ -389,6 +488,10 @@ func (o *One) eventDispatcher() {
 
 			if edc.State == 2 {
 				go func() {
+					consumer := consumers[i]
+					if consumer == nil {
+						return
+					}
 					err := consumer.ConsumeOutputEvent(edc.ContractId, edc.Event)
 					if err != nil {
 						logger.L(constant.Name).Error("error while sending output event data to consumer",
@@ -419,19 +522,27 @@ func (o *One) Run() {
 			zap.String("signal", sig.String()))
 
 		logger.L(constant.Name).Info("preparing for shutdown")
-		logger.L(constant.Name).Info("closing all triggersCapability")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
+		logger.L(constant.Name).Info("closing all triggerCapabilities")
 		for _, t := range o.triggersCapability {
 			err := t.Stop(ctx)
 			if err != nil {
 				logger.L(constant.Name).Error(err.Error())
 			}
 		}
+		logger.L(constant.Name).Info("closed all triggerCapabilities")
 
-		logger.L(constant.Name).Info("closed all triggersCapability")
+		logger.L(constant.Name).Info("closing all rpcs")
+		for _, t := range o.rpcsCapability {
+			err := t.Stop(ctx)
+			if err != nil {
+				logger.L(constant.Name).Error(err.Error())
+			}
+		}
+		logger.L(constant.Name).Info("closed all rpcs")
 
 		// close event data channel
 		close(o.eventDataChannel)
@@ -443,7 +554,7 @@ func (o *One) Run() {
 	for _, t := range o.triggersCapability {
 		trigger := t
 
-		// start all triggersCapability
+		// start all triggerCapability
 		go func() {
 			err := trigger.Start(context.TODO())
 			if err != nil {
@@ -452,7 +563,20 @@ func (o *One) Run() {
 		}()
 	}
 
-	logger.L(constant.Name).Info("all triggersCapability are executed")
+	logger.L(constant.Name).Info("all triggerCapabilities are executed")
+
+	for _, r := range o.rpcsCapability {
+		rpc := r
+		// start all rpcCapability
+		go func() {
+			err := rpc.Start(context.TODO())
+			if err != nil {
+				logger.L(constant.Name).Error(err.Error())
+			}
+		}()
+	}
+	logger.L(constant.Name).Info("all rpcCapabilities are executed")
+
 	elapsed := time.Since(timerStart)
 
 	logger.L(constant.Name).Info("run execution time", zap.Duration("seconds", elapsed))
