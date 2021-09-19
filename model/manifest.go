@@ -27,9 +27,22 @@ type ConsumerManifest struct {
 	Sink   string `yaml:"sink" json:"sink"`
 }
 
+type RPCAuthorizerManifest struct {
+	Method     string `yaml:"method" json:"method"`
+	ContractId string `yaml:"contract_id" json:"contract_id"`
+	Expression string `yaml:"expression" json:"expression"`
+}
+
+type RPCManifest struct {
+	ContractId  string                   `yaml:"contract_id" json:"contract_id"`
+	Values      map[string]string        `yaml:"values" json:"values"`
+	Authorizers []*RPCAuthorizerManifest `yaml:"authorizers" json:"authorizers"`
+}
+
 type Manifest struct {
 	Version      string                `yaml:"version" json:"version"` // 1
 	Capabilities []*CapabilityManifest `yaml:"capabilities" json:"capabilities"`
 	Services     []*ServiceManifest    `yaml:"services" json:"services"`
 	Consumers    []*ConsumerManifest   `yaml:"consumers" json:"consumers"`
+	RPCS         []*RPCManifest        `yaml:"rpcs" json:"rpcs"`
 }
