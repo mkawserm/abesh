@@ -357,8 +357,12 @@ func (o *One) setupServices(manifest *model.Manifest) error {
 	return nil
 }
 
-func (o *One) setupRPCAuthorizer(authorizer iface.IAddAuthorizer, manifest *model.RPCAuthorizerManifest) error {
-	return authorizer.AddAuthorizer(manifest.Method, manifest.ContractId, manifest.Expression)
+func (o *One) setupRPCAuthorizer(iAddAuthorizer iface.IAddAuthorizer, manifest *model.RPCAuthorizerManifest) error {
+	authorizer := o.authorizersCapability[manifest.ContractId]
+	if authorizer == nil {
+		return ErrAuthorizerNotRegistered
+	}
+	return iAddAuthorizer.AddAuthorizer(manifest.Method, manifest.Expression, authorizer)
 }
 
 func (o *One) setupRPCS(manifest *model.Manifest) error {
@@ -467,7 +471,7 @@ func (o *One) eventDispatcher() {
 				zap.String("source", edc.ContractId), zap.Any("event", edc))
 		}
 
-		for index, _ := range consumers {
+		for index := range consumers {
 			// NOTE: may have issues regarding
 			// go routine check later
 			i := index
@@ -536,8 +540,8 @@ func (o *One) Run() {
 		logger.L(constant.Name).Info("closed all triggerCapabilities")
 
 		logger.L(constant.Name).Info("closing all rpcs")
-		for _, t := range o.rpcsCapability {
-			err := t.Stop(ctx)
+		for _, r := range o.rpcsCapability {
+			err := r.Stop(ctx)
 			if err != nil {
 				logger.L(constant.Name).Error(err.Error())
 			}
