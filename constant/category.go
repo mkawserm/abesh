@@ -15,6 +15,7 @@ const CategoryCacheStore Category = "cachestore"
 const CategoryAuthorizer Category = "authorizer"
 const CategoryVM Category = "vm"
 const CategoryLibrary Category = "library"
+const CategoryRPC Category = "rpc"
 
 // CategoryString returns category name
 func CategoryString(category Category) string {
