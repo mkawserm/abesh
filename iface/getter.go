@@ -7,3 +7,7 @@ type IConfigMapGetter interface {
 type ICapabilityRegistryGetter interface {
 	GetCapabilityRegistry() ICapabilityRegistry
 }
+
+type IGetEventTransmitter interface {
+	GetEventTransmitter() IEventTransmitter
+}

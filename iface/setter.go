@@ -11,3 +11,7 @@ type ICapabilityRegistrySetter interface {
 type ISetAuthorizerCapabilityMap interface {
 	SetAuthorizerCapabilityMap(authorizerMap map[string]IAuthorizer) error
 }
+
+type ISetEventTransmitter interface {
+	SetEventTransmitter(eventTransmitter IEventTransmitter) error
+}
