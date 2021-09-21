@@ -101,7 +101,7 @@ func (o *One) TransmitOutputEvent(contractId string, event *model.Event) error {
 }
 
 func (o *One) callSetConfigMap(capability iface.ICapability, values map[string]string) error {
-	v, ok := capability.(iface.IConfigMapSetter)
+	v, ok := capability.(iface.ISetConfigMap)
 	logger.L(constant.Name).Debug("callSetConfigMap info",
 		zap.String("contract_id", capability.ContractId()),
 		zap.Bool("ok", ok))
@@ -113,7 +113,7 @@ func (o *One) callSetConfigMap(capability iface.ICapability, values map[string]s
 }
 
 func (o *One) callSetCapabilityRegistry(capability iface.ICapability) error {
-	v, ok := capability.(iface.ICapabilityRegistrySetter)
+	v, ok := capability.(iface.ISetCapabilityRegistry)
 
 	logger.L(constant.Name).Debug("callSetCapabilityRegistry info",
 		zap.String("contract_id", capability.ContractId()),

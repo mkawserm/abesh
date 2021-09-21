@@ -1,6 +1,9 @@
 package iface
 
-import "context"
+import (
+	"context"
+	"github.com/mkawserm/abesh/model"
+)
 
 type ITrigger interface {
 	ICapability
@@ -13,6 +16,6 @@ type ITrigger interface {
 
 	AddService(authorizationHandler AuthorizationHandler,
 		authorizationExpression string,
-		triggerValues ConfigMap,
+		triggerValues model.ConfigMap,
 		service IService) error
 }

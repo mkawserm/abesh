@@ -1,10 +1,12 @@
 package iface
 
-type IConfigMapGetter interface {
-	GetConfigMap() ConfigMap
+import "github.com/mkawserm/abesh/model"
+
+type IGetConfigMap interface {
+	GetConfigMap() model.ConfigMap
 }
 
-type ICapabilityRegistryGetter interface {
+type IGetCapabilityRegistry interface {
 	GetCapabilityRegistry() ICapabilityRegistry
 }
 

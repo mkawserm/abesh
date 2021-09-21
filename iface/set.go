@@ -1,10 +1,12 @@
 package iface
 
-type IConfigMapSetter interface {
-	SetConfigMap(ConfigMap) error
+import "github.com/mkawserm/abesh/model"
+
+type ISetConfigMap interface {
+	SetConfigMap(model.ConfigMap) error
 }
 
-type ICapabilityRegistrySetter interface {
+type ISetCapabilityRegistry interface {
 	SetCapabilityRegistry(capabilityRegistry ICapabilityRegistry) error
 }
 

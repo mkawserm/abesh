@@ -8,7 +8,7 @@ import (
 )
 
 type Authorizer struct {
-	mValues iface.ConfigMap
+	mValues model.ConfigMap
 }
 
 func (e *Authorizer) Name() string {
@@ -27,7 +27,7 @@ func (e *Authorizer) ContractId() string {
 	return "abesh:ex_authorizer"
 }
 
-func (e *Authorizer) GetConfigMap() iface.ConfigMap {
+func (e *Authorizer) GetConfigMap() model.ConfigMap {
 	return e.mValues
 }
 
@@ -35,7 +35,7 @@ func (e *Authorizer) Setup() error {
 	return nil
 }
 
-func (e *Authorizer) SetConfigMap(values iface.ConfigMap) error {
+func (e *Authorizer) SetConfigMap(values model.ConfigMap) error {
 	e.mValues = values
 
 	return nil

@@ -9,7 +9,7 @@ import (
 )
 
 type Consumer struct {
-	mValues iface.ConfigMap
+	mValues model.ConfigMap
 }
 
 func (e *Consumer) Name() string {
@@ -28,7 +28,7 @@ func (e *Consumer) ContractId() string {
 	return "abesh:ex_event_consumer"
 }
 
-func (e *Consumer) GetConfigMap() iface.ConfigMap {
+func (e *Consumer) GetConfigMap() model.ConfigMap {
 	return e.mValues
 }
 
@@ -36,7 +36,7 @@ func (e *Consumer) Setup() error {
 	return nil
 }
 
-func (e *Consumer) SetConfigMap(values iface.ConfigMap) error {
+func (e *Consumer) SetConfigMap(values model.ConfigMap) error {
 	e.mValues = values
 
 	return nil

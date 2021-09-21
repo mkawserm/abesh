@@ -30,7 +30,7 @@ type HTTPServer struct {
 	mPort                     string
 	mRequestTimeout           time.Duration
 	mDefault404HandlerEnabled bool
-	mValues                   iface.ConfigMap
+	mValues                   model.ConfigMap
 
 	mHttpServer       *http.Server
 	mHttpServerMux    *http.ServeMux
@@ -53,11 +53,11 @@ func (h *HTTPServer) ContractId() string {
 	return "abesh:httpserver"
 }
 
-func (h *HTTPServer) GetConfigMap() iface.ConfigMap {
+func (h *HTTPServer) GetConfigMap() model.ConfigMap {
 	return h.mValues
 }
 
-func (h *HTTPServer) SetConfigMap(values iface.ConfigMap) error {
+func (h *HTTPServer) SetConfigMap(values model.ConfigMap) error {
 	h.mValues = values
 	h.mHost = h.mValues.String("host", "0.0.0.0")
 	h.mPort = h.mValues.String("port", "8080")
@@ -278,7 +278,7 @@ func (h *HTTPServer) debugMessage(request *http.Request) {
 func (h *HTTPServer) AddService(
 	authorizationHandler iface.AuthorizationHandler,
 	authorizationExpression string,
-	triggerValues iface.ConfigMap,
+	triggerValues model.ConfigMap,
 	service iface.IService) error {
 
 	var method string
