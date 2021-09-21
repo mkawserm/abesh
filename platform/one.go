@@ -171,14 +171,16 @@ func (o *One) setupCapabilities(manifest *model.Manifest) error {
 
 			o.triggersCapability[newCapability.ContractId()] = newCapabilityTrigger
 		} else if capability.Category() == string(constant.CategoryRPC) {
-			newCapabilityRPC := newCapability.(iface.IRPC)
-
-			err = newCapabilityRPC.AddEventTransmitter(o)
-			if err != nil {
-				return err
-			}
-
-			o.rpcsCapability[newCapability.ContractId()] = newCapabilityRPC
+			//newCapabilityRPC := newCapability.(iface.IRPC)
+			//
+			//err = newCapabilityRPC.AddEventTransmitter(o)
+			//if err != nil {
+			//	return err
+			//}
+			//
+			//o.rpcsCapability[newCapability.ContractId()] = newCapabilityRPC
+			// skip rpc
+			continue
 		} else if capability.Category() == string(constant.CategoryService) {
 			// skip service
 			continue
@@ -227,17 +229,6 @@ func (o *One) setupCapabilities(manifest *model.Manifest) error {
 			return errLocal
 		}
 	}
-
-	// rpcs
-	//for _, c := range o.rpcsCapability {
-	//	if errLocal := o.callSetCapabilityRegistry(c); errLocal != nil {
-	//		return errLocal
-	//	}
-	//
-	//	if errLocal := o.callSetup(c); errLocal != nil {
-	//		return errLocal
-	//	}
-	//}
 
 	// other capabilities
 	for _, c := range o.capabilityRegistry.Iterator() {
@@ -409,6 +400,12 @@ func (o *One) setupRPCS(manifest *model.Manifest) error {
 				return errLocal
 			}
 		}
+
+		if errLocal := rpc.AddEventTransmitter(o); errLocal != nil {
+			return errLocal
+		}
+
+		o.rpcsCapability[rpc.ContractId()] = rpc
 		logger.L(constant.Name).Debug("authorizers setup complete", zap.String("contract_id", rpc.ContractId()))
 	}
 
