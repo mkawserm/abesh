@@ -125,7 +125,7 @@ func (e *ExRPC) New() iface.ICapability {
 }
 
 func (e *ExRPC) Start(_ context.Context) error {
-	logger.L(e.ContractId()).Info("http server started at " + e.mHttpServer.Addr)
+	logger.L(e.ContractId()).Info("ex rpc server started at " + e.mHttpServer.Addr)
 	if err := e.mHttpServer.ListenAndServe(); err != http.ErrServerClosed {
 		return err
 	}
