@@ -1,20 +1,17 @@
 package iface
 
 import (
-	"context"
 	"github.com/mkawserm/abesh/model"
 )
 
 type ITrigger interface {
 	ICapability
+	IStart
+	IStop
+	ISetEventTransmitter
+	IGetEventTransmitter
 
-	Start(ctx context.Context) error
-	Stop(ctx context.Context) error
-
-	GetEventTransmitter() IEventTransmitter
-	AddEventTransmitter(eventTransmitter IEventTransmitter) error
-
-	AddService(authorizationHandler AuthorizationHandler,
+	AddService(authorizer IAuthorizer,
 		authorizationExpression string,
 		triggerValues model.ConfigMap,
 		service IService) error
