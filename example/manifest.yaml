@@ -59,11 +59,11 @@ triggers:
       method: "GET"
       path: "/err"
 
-rpcs:
-  - rpc: "abesh:ex_rpc"
-    authorizer: "abesh:ex_authorizer"
-    authorizer_expression: "allowAll"
-    method: "/test.TestRPC/Add"
+#rpcs:
+#  - rpc: "abesh:ex_rpc"
+#    authorizer: "abesh:ex_authorizer"
+#    authorizer_expression: "allowAll"
+#    method: "/test.TestRPC/Add"
 
 consumers:
   - source: "abesh:ex_echo"
