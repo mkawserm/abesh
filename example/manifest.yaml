@@ -2,6 +2,9 @@ version: "1"
 
 capabilities:
   - contract_id: "abesh:httpclient"
+    values:
+      url: "https://jsonip.com"
+
   - contract_id: "abesh:httpserver"
     values:
       host: "0.0.0.0"
@@ -15,57 +18,56 @@ capabilities:
       s405m: "405 error"
       s408m: "408 request timeout"
       s499m: "499 request cancelled"
+
   - contract_id: "abesh:ex_authorizer"
+
   - contract_id: "abesh:ex_event_consumer"
 
-services:
   - contract_id: "abesh:ex_echo"
     values:
       key1: "test1"
       key2: "test2"
 
-    triggers:
-      - contract_id: "abesh:httpserver"
-        authorizer:
-          contract_id: "abesh:ex_authorizer"
-          expression: "allowAll"
-        values:
-          method: "GET"
-          path: "/default"
-
-      - contract_id: "abesh:httpserver"
-        authorizer:
-          contract_id: "abesh:ex_authorizer"
-          expression: "denyAll"
-        values:
-          method: "GET"
-          path: "/echo"
-
-  - contract_id: "abesh:ex_httpclient"
-    values:
-      url: "https://jsonip.com"
-    triggers:
-      - contract_id: "abesh:httpserver"
-        values:
-          method: "GET"
-          path: "/httpclient"
-
   - contract_id: "abesh:ex_err"
-    triggers:
-      - contract_id: "abesh:httpserver"
-        values:
-          method: "GET"
-          path: "/err"
-#rpcs:
-#  - contract_id: "abesh:ex_rpc"
-#    values:
-#      key1: value1
-#      key2: value2
-#    authorizers:
-#      - contract_id: "abesh:ex_authorizer"
-#        expression: "allowAll"
-#        method: "/test.TestRPC/Add"
+
+triggers:
+  - trigger: "abesh:httpserver"
+    service: "abesh:ex_echo"
+    trigger_values:
+      method: "GET"
+      path: "/default"
+    authrizer: "abesh:ex_authorizer"
+    authorizer_expressin: "allowAll"
+
+  - trigger: "abesh:httpserver"
+    service: "abesh:ex_echo"
+    trigger_values:
+      method: "GET"
+      path: "/echo"
+    authrizer: "abesh:ex_authorizer"
+    authorizer_expressin: "denyAll"
+
+  - trigger: "abesh:httpserver"
+    service: "abesh:ex_httpclient"
+    trigger_values:
+      method: "GET"
+      path: "/httpclient"
+
+  - trigger: "abesh:httpserver"
+    service: "abesh:ex_err"
+    trigger_values:
+      method: "GET"
+      path: "/err"
+
+rpcs:
+  - rpc: "abesh:ex_rpc"
+    authorizer: "abesh:ex_authorizer"
+    authorizer_expression: "allowAll"
+    method: "/test.TestRPC/Add"
 
 consumers:
   - source: "abesh:ex_echo"
     sink: "abesh:ex_event_consumer"
+
+start:
+  - "abesh:httpserver"
