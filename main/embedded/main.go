@@ -8,6 +8,7 @@ import _ "github.com/mkawserm/abesh/example/authorizer"
 import _ "github.com/mkawserm/abesh/example/consumer"
 import _ "github.com/mkawserm/abesh/example/exhttpclient"
 import _ "github.com/mkawserm/abesh/example/exerr"
+import _ "github.com/mkawserm/abesh/example/exrpc"
 import _ "embed"
 
 //go:embed manifest.yaml

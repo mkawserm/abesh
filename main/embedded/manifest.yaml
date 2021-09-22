@@ -31,6 +31,12 @@ capabilities:
     values:
       url: "https://jsonip.com"
 
+  - contract_id: "abesh:ex_rpc"
+    values:
+      host: "0.0.0.0"
+      port: "9091"
+
+
 triggers:
   - trigger: "abesh:httpserver"
     trigger_values:
@@ -60,11 +66,15 @@ triggers:
       path: "/err"
     service: "abesh:ex_err"
 
-#rpcs:
-#  - rpc: "abesh:ex_rpc"
-#    method: "/test.TestRPC/Add"
-#    authorizer: "abesh:ex_authorizer"
-#    authorizer_expression: "allowAll"
+rpcs:
+  - rpc: "abesh:ex_rpc"
+    method: "/test.TestRPC/Allow"
+    authorizer: "abesh:ex_authorizer"
+    authorizer_expression: "allowAll"
+  - rpc: "abesh:ex_rpc"
+    method: "/test.TestRPC/Deny"
+    authorizer: "abesh:ex_authorizer"
+    authorizer_expression: "denyAll"
 
 consumers:
   - source: "abesh:ex_echo"
@@ -72,3 +82,4 @@ consumers:
 
 start:
   - "abesh:httpserver"
+  - "abesh:ex_rpc"
