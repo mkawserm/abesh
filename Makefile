@@ -24,3 +24,10 @@ run-default:
 
 build-default:
 	go build -o bin/abesh main/default/main.go
+
+run-embedded-print-manifest:
+	go run main/embedded/main.go embedded print-manifest
+
+run-embedded:
+	go run main/embedded/main.go embedded run
+

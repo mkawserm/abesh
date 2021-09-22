@@ -6,8 +6,8 @@ import (
 
 var runCMD = &cobra.Command{
 	Use:   "run",
-	Short: "run the platform",
-	Long:  "run all platform components",
+	Short: "Run the platform",
+	Long:  "Run all platform components",
 	Run: func(cmd *cobra.Command, args []string) {
 		p := PlatformSetup(manifestFilePath)
 		p.Run()

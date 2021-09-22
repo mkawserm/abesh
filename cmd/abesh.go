@@ -8,9 +8,9 @@ import (
 )
 
 var abeshCMD = &cobra.Command{
-	Use: constant.Name,
+	Use:   constant.Name,
 	Short: constant.ShortDescription,
-	Long: constant.LongDescription,
+	Long:  constant.LongDescription,
 	Run: func(cmd *cobra.Command, _ []string) {
 		_ = cmd.Help()
 		os.Exit(0)
@@ -18,9 +18,9 @@ var abeshCMD = &cobra.Command{
 }
 
 var abeshVersion = &cobra.Command{
-	Use: "version",
-	Short: "abesh version",
-	Long: "show abesh version",
+	Use:   "version",
+	Short: "Abesh version",
+	Long:  "Show abesh version",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(constant.Version)
 		os.Exit(0)
@@ -28,9 +28,9 @@ var abeshVersion = &cobra.Command{
 }
 
 var abeshAuthors = &cobra.Command{
-	Use: "authors",
-	Short: "abesh authors",
-	Long: "show abesh authors name",
+	Use:   "authors",
+	Short: "Abesh authors",
+	Long:  "Show abesh authors name",
 
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(constant.Authors)
@@ -38,6 +38,6 @@ var abeshAuthors = &cobra.Command{
 	},
 }
 
-func init()  {
+func init() {
 	abeshCMD.AddCommand(abeshVersion, abeshAuthors)
 }
