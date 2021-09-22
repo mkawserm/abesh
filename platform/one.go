@@ -17,10 +17,10 @@ import (
 )
 
 var ErrCapabilityNotFound = errors.New("capability is not found in the global registry")
-var ErrCapabilityCategoryIsNotService = errors.New("capability category is not service")
 var ErrTriggerNotRegistered = errors.New("the requested trigger has not been registered")
 var ErrAuthorizerNotRegistered = errors.New("the requested authorizer has not been registered")
-var ErrCapabilityCategoryIsNotRPC = errors.New("capability category is not rpc")
+var ErrRPCNotRegistered = errors.New("the requested rpc has not been registered")
+var ErrServiceNotRegistered = errors.New("the requested service has not been registered")
 
 type EventData struct {
 	State      uint8 /*0 break 1 input 2 output*/
@@ -35,12 +35,15 @@ type One struct {
 	authorizersCapability map[string]iface.IAuthorizer
 	consumersCapability   map[string]iface.IConsumer
 	rpcsCapability        map[string]iface.IRPC
+	servicesCapability    map[string]iface.IService
 
 	capabilityRegistry *registry.CapabilityRegistry
 
 	sourceSinkMap map[string][]string
 
 	eventDataChannel EventDataChannel
+
+	startCapabilityList []iface.ICapability
 }
 
 func (o *One) GetTriggersCapability() map[string]iface.ITrigger {
@@ -100,7 +103,7 @@ func (o *One) TransmitOutputEvent(contractId string, event *model.Event) error {
 	return nil
 }
 
-func (o *One) callSetConfigMap(capability iface.ICapability, values map[string]string) error {
+func (o *One) callSetConfigMap(capability iface.ICapability, values model.ConfigMap) error {
 	v, ok := capability.(iface.ISetConfigMap)
 	logger.L(constant.Name).Debug("callSetConfigMap info",
 		zap.String("contract_id", capability.ContractId()),
@@ -108,6 +111,18 @@ func (o *One) callSetConfigMap(capability iface.ICapability, values map[string]s
 
 	if ok {
 		return v.SetConfigMap(values)
+	}
+	return nil
+}
+
+func (o *One) callSetEventTransmitter(capability iface.ICapability) error {
+	v, ok := capability.(iface.ISetEventTransmitter)
+	logger.L(constant.Name).Debug("callSetEventTransmitter info",
+		zap.String("contract_id", capability.ContractId()),
+		zap.Bool("ok", ok))
+
+	if ok {
+		return v.SetEventTransmitter(o)
 	}
 	return nil
 }
@@ -138,11 +153,11 @@ func (o *One) callSetup(capability iface.ICapability) error {
 	return nil
 }
 
-func (o *One) setupCapabilities(manifest *model.Manifest) error {
+func (o *One) configureCapabilities(manifest *model.Manifest) error {
 	var err error
 
 	// configure all capability
-	// separate triggersCapability, authorizersCapability, consumersCapability from other
+	// separate triggers, authorizers, consumers, rpcs from other
 	// capabilities
 	for _, v := range manifest.Capabilities {
 
@@ -161,36 +176,25 @@ func (o *One) setupCapabilities(manifest *model.Manifest) error {
 			return err
 		}
 
+		err = o.callSetEventTransmitter(newCapability)
+		if err != nil {
+			return err
+		}
+
 		if capability.Category() == string(constant.CategoryTrigger) {
 			newCapabilityTrigger := newCapability.(iface.ITrigger)
-
-			err = newCapabilityTrigger.AddEventTransmitter(o)
-			if err != nil {
-				return err
-			}
-
 			o.triggersCapability[newCapability.ContractId()] = newCapabilityTrigger
 		} else if capability.Category() == string(constant.CategoryRPC) {
-			//newCapabilityRPC := newCapability.(iface.IRPC)
-			//
-			//err = newCapabilityRPC.AddEventTransmitter(o)
-			//if err != nil {
-			//	return err
-			//}
-			//
-			//o.rpcsCapability[newCapability.ContractId()] = newCapabilityRPC
-			// skip rpc
-			continue
+			newCapabilityRPC := newCapability.(iface.IRPC)
+			o.rpcsCapability[newCapability.ContractId()] = newCapabilityRPC
 		} else if capability.Category() == string(constant.CategoryService) {
-			// skip service
-			continue
+			newCapabilityService := newCapability.(iface.IService)
+			o.servicesCapability[newCapability.ContractId()] = newCapabilityService
 		} else if capability.Category() == string(constant.CategoryAuthorizer) {
 			newCapabilityAuthorizer := newCapability.(iface.IAuthorizer)
-
 			o.authorizersCapability[newCapability.ContractId()] = newCapabilityAuthorizer
 		} else if capability.Category() == string(constant.CategoryConsumer) {
 			newCapabilityConsumer := newCapability.(iface.IConsumer)
-
 			o.consumersCapability[newCapability.ContractId()] = newCapabilityConsumer
 		} else {
 			o.capabilityRegistry.RegisterCapability(newCapability)
@@ -202,7 +206,26 @@ func (o *One) setupCapabilities(manifest *model.Manifest) error {
 		if errLocal := o.callSetCapabilityRegistry(c); errLocal != nil {
 			return errLocal
 		}
+		if errLocal := o.callSetup(c); errLocal != nil {
+			return errLocal
+		}
+	}
 
+	// for rpcs
+	for _, c := range o.rpcsCapability {
+		if errLocal := o.callSetCapabilityRegistry(c); errLocal != nil {
+			return errLocal
+		}
+		if errLocal := o.callSetup(c); errLocal != nil {
+			return errLocal
+		}
+	}
+
+	// for services
+	for _, c := range o.servicesCapability {
+		if errLocal := o.callSetCapabilityRegistry(c); errLocal != nil {
+			return errLocal
+		}
 		if errLocal := o.callSetup(c); errLocal != nil {
 			return errLocal
 		}
@@ -213,7 +236,6 @@ func (o *One) setupCapabilities(manifest *model.Manifest) error {
 		if errLocal := o.callSetCapabilityRegistry(c); errLocal != nil {
 			return errLocal
 		}
-
 		if errLocal := o.callSetup(c); errLocal != nil {
 			return errLocal
 		}
@@ -224,7 +246,6 @@ func (o *One) setupCapabilities(manifest *model.Manifest) error {
 		if errLocal := o.callSetCapabilityRegistry(c); errLocal != nil {
 			return errLocal
 		}
-
 		if errLocal := o.callSetup(c); errLocal != nil {
 			return errLocal
 		}
@@ -235,7 +256,6 @@ func (o *One) setupCapabilities(manifest *model.Manifest) error {
 		if errLocal := o.callSetCapabilityRegistry(c); errLocal != nil {
 			return errLocal
 		}
-
 		if errLocal := o.callSetup(c); errLocal != nil {
 			return errLocal
 		}
@@ -244,44 +264,7 @@ func (o *One) setupCapabilities(manifest *model.Manifest) error {
 	return nil
 }
 
-func (o *One) setupTriggers(service iface.IService, triggerManifests []*model.TriggerManifest) error {
-	var err error
-
-	for _, t := range triggerManifests {
-		trigger := o.triggersCapability[t.ContractId]
-		if trigger == nil {
-			return ErrTriggerNotRegistered
-		}
-
-		var authorizer iface.IAuthorizer
-		var expression string
-		var authorizationHandler iface.AuthorizationHandler
-
-		if t.Authorizer != nil {
-			authorizer = o.authorizersCapability[t.Authorizer.ContractId]
-			expression = t.Authorizer.Expression
-			if authorizer == nil {
-				return ErrAuthorizerNotRegistered
-			}
-
-			authorizationHandler = authorizer.IsAuthorized
-		}
-
-		logger.L(constant.Name).Debug("adding service to trigger", zap.String("trigger_contract_id", t.ContractId))
-		err = trigger.AddService(authorizationHandler,
-			expression,
-			t.Values,
-			service)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (o *One) setupConsumers(manifest *model.Manifest) error {
+func (o *One) configureConsumers(manifest *model.Manifest) error {
 	for _, cm := range manifest.Consumers {
 		v, ok := o.sourceSinkMap[cm.Source]
 
@@ -305,108 +288,62 @@ func (o *One) setupConsumers(manifest *model.Manifest) error {
 	return nil
 }
 
-func (o *One) setupServices(manifest *model.Manifest) error {
-	var err error
-
-	//Configure services
-	for _, s := range manifest.Services {
-		capability := registry.GlobalRegistry().GetCapability(s.ContractId)
-
-		if capability == nil {
-			return ErrCapabilityNotFound
+func (o *One) configureTriggers(manifest *model.Manifest) error {
+	//Configuring triggers
+	for _, s := range manifest.Triggers {
+		trigger := o.triggersCapability[s.Trigger]
+		if trigger == nil {
+			logger.L(constant.Name).Error("trigger not found", zap.String("contract_id", s.Trigger))
+			return ErrTriggerNotRegistered
 		}
 
-		service := capability.New().(iface.IService)
-
+		service := o.servicesCapability[s.Service]
 		if service == nil {
-			return ErrCapabilityCategoryIsNotService
+			logger.L(constant.Name).Error("service not found", zap.String("contract_id", s.Service))
+			return ErrServiceNotRegistered
 		}
 
-		if service.Category() != string(constant.CategoryService) {
-			return ErrCapabilityCategoryIsNotService
+		var authorizer iface.IAuthorizer
+		if len(s.Authorizer) != 0 {
+			authorizer = o.authorizersCapability[s.Authorizer]
+			if authorizer == nil {
+				logger.L(constant.Name).Error("authorizer not found", zap.String("contract_id", s.Authorizer))
+				return ErrAuthorizerNotRegistered
+			}
 		}
 
-		if errLocal := o.callSetConfigMap(service, s.Values); errLocal != nil {
+		if errLocal := trigger.AddService(authorizer,
+			s.AuthorizerExpression,
+			s.TriggerValues,
+			service); errLocal != nil {
 			return errLocal
 		}
 
-		if errLocal := o.callSetCapabilityRegistry(service); errLocal != nil {
-			return errLocal
-		}
-
-		if errLocal := o.callSetup(service); errLocal != nil {
-			return errLocal
-		}
-
-		logger.L(constant.Name).Debug("configuring triggersCapability", zap.String("contract_id", service.ContractId()))
-		err = o.setupTriggers(service, s.Triggers)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
 }
 
-func (o *One) setupRPCAuthorizer(iAddAuthorizer iface.IAddAuthorizer, manifest *model.RPCAuthorizerManifest) error {
-	authorizer := o.authorizersCapability[manifest.ContractId]
-	if authorizer == nil {
-		return ErrAuthorizerNotRegistered
-	}
-	return iAddAuthorizer.AddAuthorizer(manifest.Method, manifest.Expression, authorizer)
-}
-
-func (o *One) setupRPCS(manifest *model.Manifest) error {
+func (o *One) configureRPCS(manifest *model.Manifest) error {
 	// configuring RPCS
 	for _, s := range manifest.RPCS {
-		capability := registry.GlobalRegistry().GetCapability(s.ContractId)
-
-		if capability == nil {
-			return ErrCapabilityNotFound
-		}
-
-		rpc := capability.New().(iface.IRPC)
-
+		rpc := o.rpcsCapability[s.RPC]
 		if rpc == nil {
-			return ErrCapabilityCategoryIsNotRPC
+			return ErrRPCNotRegistered
 		}
 
-		if rpc.Category() != string(constant.CategoryRPC) {
-			return ErrCapabilityCategoryIsNotRPC
-		}
-
-		if errLocal := o.callSetConfigMap(rpc, s.Values); errLocal != nil {
-			return errLocal
-		}
-
-		if errLocal := o.callSetCapabilityRegistry(rpc); errLocal != nil {
-			return errLocal
-		}
-
-		if errLocal := o.callSetup(rpc); errLocal != nil {
-			return errLocal
-		}
-
-		rpcAddAuthorizer := rpc.(iface.IAddAuthorizer)
-		if rpcAddAuthorizer == nil {
-			logger.L(constant.Name).Debug("add authorizer interface is not satisfied so no need to configure authorizers",
-				zap.String("contract_id", rpc.ContractId()))
-			continue
-		}
-
-		logger.L(constant.Name).Debug("configuring authorizers", zap.String("contract_id", rpc.ContractId()))
-		for _, a := range s.Authorizers {
-			if errLocal := o.setupRPCAuthorizer(rpcAddAuthorizer, a); errLocal != nil {
+		if len(s.Authorizer) != 0 {
+			authorizer := o.authorizersCapability[s.Authorizer]
+			if authorizer == nil {
+				return ErrAuthorizerNotRegistered
+			}
+			if errLocal := rpc.AddAuthorizer(authorizer, s.AuthorizerExpression, s.Method); errLocal != nil {
 				return errLocal
 			}
+			logger.L(constant.Name).Debug("authorizers setup complete", zap.String("contract_id", rpc.ContractId()))
+		} else {
+			logger.L(constant.Name).Debug("no authorizer defined", zap.String("contract_id", rpc.ContractId()))
 		}
-
-		if errLocal := rpc.AddEventTransmitter(o); errLocal != nil {
-			return errLocal
-		}
-
-		o.rpcsCapability[rpc.ContractId()] = rpc
-		logger.L(constant.Name).Debug("authorizers setup complete", zap.String("contract_id", rpc.ContractId()))
 	}
 
 	return nil
@@ -416,38 +353,71 @@ func (o *One) Setup(manifest *model.Manifest) error {
 	timerStart := time.Now()
 	var err error
 
+	/* INIT ALL DATA */
 	o.triggersCapability = make(map[string]iface.ITrigger)
 	o.authorizersCapability = make(map[string]iface.IAuthorizer)
 	o.consumersCapability = make(map[string]iface.IConsumer)
 	o.rpcsCapability = make(map[string]iface.IRPC)
+	o.servicesCapability = make(map[string]iface.IService)
+	o.startCapabilityList = make([]iface.ICapability, 0, 100)
 	o.capabilityRegistry = registry.NewCapabilityRegistry()
 
 	o.sourceSinkMap = make(map[string][]string)
 	o.eventDataChannel = make(EventDataChannel, conf.EnvironmentConfigIns().EventBufferSize)
+	/* INIT ALL DATA COMPLETE */
 
+	/* CONFIGURE */
 	logger.L(constant.Name).Debug("configuring capabilities")
-	err = o.setupCapabilities(manifest)
+	err = o.configureCapabilities(manifest)
 	if err != nil {
 		return err
 	}
 
-	logger.L(constant.Name).Debug("configuring services")
-	err = o.setupServices(manifest)
+	logger.L(constant.Name).Debug("configuring triggers")
+	err = o.configureTriggers(manifest)
 	if err != nil {
 		return err
 	}
 
 	logger.L(constant.Name).Debug("configuring rpcs")
-	err = o.setupRPCS(manifest)
+	err = o.configureRPCS(manifest)
 	if err != nil {
 		return err
 	}
 
 	logger.L(constant.Name).Debug("configuring consumers")
-	err = o.setupConsumers(manifest)
+	err = o.configureConsumers(manifest)
 	if err != nil {
 		return err
 	}
+
+	logger.L(constant.Name).Debug("assign start capabilities")
+	for _, value := range manifest.Start {
+		if v, ok := o.triggersCapability[value]; ok {
+			o.startCapabilityList = append(o.startCapabilityList, v)
+		}
+
+		if v, ok := o.rpcsCapability[value]; ok {
+			o.startCapabilityList = append(o.startCapabilityList, v)
+		}
+
+		if v, ok := o.servicesCapability[value]; ok {
+			o.startCapabilityList = append(o.startCapabilityList, v)
+		}
+
+		if v, ok := o.consumersCapability[value]; ok {
+			o.startCapabilityList = append(o.startCapabilityList, v)
+		}
+
+		if v, ok := o.authorizersCapability[value]; ok {
+			o.startCapabilityList = append(o.startCapabilityList, v)
+		}
+
+		if v := o.capabilityRegistry.Capability(value); v != nil {
+			o.startCapabilityList = append(o.startCapabilityList, v)
+		}
+	}
+	logger.L(constant.Name).Debug("assign start capabilities done")
 
 	elapsed := time.Since(timerStart)
 
@@ -527,23 +497,14 @@ func (o *One) Run() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		logger.L(constant.Name).Info("closing all triggerCapabilities")
-		for _, t := range o.triggersCapability {
-			err := t.Stop(ctx)
+		logger.L(constant.Name).Info("closing all capabilities")
+		for _, c := range o.startCapabilityList {
+			err := o.callStop(ctx, c)
 			if err != nil {
 				logger.L(constant.Name).Error(err.Error())
 			}
 		}
-		logger.L(constant.Name).Info("closed all triggerCapabilities")
-
-		logger.L(constant.Name).Info("closing all rpcs")
-		for _, r := range o.rpcsCapability {
-			err := r.Stop(ctx)
-			if err != nil {
-				logger.L(constant.Name).Error(err.Error())
-			}
-		}
-		logger.L(constant.Name).Info("closed all rpcs")
+		logger.L(constant.Name).Info("closed all capabilities")
 
 		// close event data channel
 		close(o.eventDataChannel)
@@ -552,31 +513,19 @@ func (o *One) Run() {
 		close(idleChan)
 	}()
 
-	for _, t := range o.triggersCapability {
-		trigger := t
-
-		// start all triggerCapability
+	logger.L(constant.Name).Info("starting all")
+	// start all capabilities which has start method
+	for _, c := range o.startCapabilityList {
+		capability := c
 		go func() {
-			err := trigger.Start(context.TODO())
+			err := o.callStart(context.TODO(), capability)
 			if err != nil {
 				logger.L(constant.Name).Error(err.Error())
 			}
 		}()
 	}
 
-	logger.L(constant.Name).Info("all triggerCapabilities are executed")
-
-	for _, r := range o.rpcsCapability {
-		rpc := r
-		// start all rpcCapability
-		go func() {
-			err := rpc.Start(context.TODO())
-			if err != nil {
-				logger.L(constant.Name).Error(err.Error())
-			}
-		}()
-	}
-	logger.L(constant.Name).Info("all rpcCapabilities are executed")
+	logger.L(constant.Name).Info("all started")
 
 	elapsed := time.Since(timerStart)
 
@@ -585,6 +534,22 @@ func (o *One) Run() {
 	<-idleChan
 
 	logger.L(constant.Name).Info("shutdown complete")
+}
+
+func (o *One) callStart(context context.Context, capability iface.ICapability) error {
+	v, ok := capability.(iface.IStart)
+	if ok {
+		return v.Start(context)
+	}
+	return nil
+}
+
+func (o *One) callStop(context context.Context, capability iface.ICapability) error {
+	v, ok := capability.(iface.IStop)
+	if ok {
+		return v.Stop(context)
+	}
+	return nil
 }
 
 func Search(length int, f func(index int) bool) int {

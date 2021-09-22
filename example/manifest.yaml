@@ -2,8 +2,6 @@ version: "1"
 
 capabilities:
   - contract_id: "abesh:httpclient"
-    values:
-      url: "https://jsonip.com"
 
   - contract_id: "abesh:httpserver"
     values:
@@ -29,6 +27,9 @@ capabilities:
       key2: "test2"
 
   - contract_id: "abesh:ex_err"
+  - contract_id: "abesh:ex_httpclient"
+    values:
+      url: "https://jsonip.com"
 
 triggers:
   - trigger: "abesh:httpserver"

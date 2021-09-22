@@ -66,7 +66,7 @@ func (h *HTTPServer) SetConfigMap(values model.ConfigMap) error {
 	return nil
 }
 
-func (h *HTTPServer) AddEventTransmitter(eventTransmitter iface.IEventTransmitter) error {
+func (h *HTTPServer) SetEventTransmitter(eventTransmitter iface.IEventTransmitter) error {
 	h.mEventTransmitter = eventTransmitter
 	return nil
 }
@@ -276,7 +276,7 @@ func (h *HTTPServer) debugMessage(request *http.Request) {
 }
 
 func (h *HTTPServer) AddService(
-	authorizationHandler iface.AuthorizationHandler,
+	authorizer iface.IAuthorizer,
 	authorizationExpression string,
 	triggerValues model.ConfigMap,
 	service iface.IService) error {
@@ -346,8 +346,8 @@ func (h *HTTPServer) AddService(
 			}
 		}
 
-		if authorizationHandler != nil {
-			if !authorizationHandler(authorizationExpression, metadata) {
+		if authorizer != nil {
+			if !authorizer.IsAuthorized(authorizationExpression, metadata) {
 				h.s403m(writer, nil)
 				return
 			}
