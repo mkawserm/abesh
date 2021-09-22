@@ -1,25 +1,23 @@
 package model
 
-type AuthorizerManifest struct {
-	ContractId string `yaml:"contract_id" json:"contract_id"`
-	Expression string `yaml:"expression" json:"expression"`
+type CapabilityManifest struct {
+	ContractId string    `yaml:"contract_id" json:"contract_id"`
+	Values     ConfigMap `yaml:"values" json:"values"`
 }
 
 type TriggerManifest struct {
-	ContractId string              `yaml:"contract_id" json:"contract_id"`
-	Authorizer *AuthorizerManifest `yaml:"authorizer" json:"authorizer"`
-	Values     map[string]string   `yaml:"values" json:"values"`
+	Trigger              string    `yaml:"trigger" json:"trigger"`
+	TriggerValues        ConfigMap `yaml:"trigger_values" json:"trigger_values"`
+	Service              string    `yaml:"service" json:"service"`
+	Authorizer           string    `yaml:"authorizer" json:"authorizer"`
+	AuthorizerExpression string    `yaml:"authorizer_expression" json:"authorizer_expression"`
 }
 
-type CapabilityManifest struct {
-	ContractId string            `yaml:"contract_id" json:"contract_id"`
-	Values     map[string]string `yaml:"values" json:"values"`
-}
-
-type ServiceManifest struct {
-	ContractId string             `yaml:"contract_id" json:"contract_id"`
-	Values     map[string]string  `yaml:"values" json:"values"`
-	Triggers   []*TriggerManifest `yaml:"triggers" json:"triggers"`
+type RPCManifest struct {
+	RPC                  string `yaml:"rpc" json:"rpc"`
+	Method               string `yaml:"method" json:"method"`
+	Authorizer           string `yaml:"authorizer" json:"authorizer"`
+	AuthorizerExpression string `yaml:"authorizer_expression" json:"authorizer_expression"`
 }
 
 type ConsumerManifest struct {
@@ -27,22 +25,11 @@ type ConsumerManifest struct {
 	Sink   string `yaml:"sink" json:"sink"`
 }
 
-type RPCAuthorizerManifest struct {
-	Method     string `yaml:"method" json:"method"`
-	ContractId string `yaml:"contract_id" json:"contract_id"`
-	Expression string `yaml:"expression" json:"expression"`
-}
-
-type RPCManifest struct {
-	ContractId  string                   `yaml:"contract_id" json:"contract_id"`
-	Values      map[string]string        `yaml:"values" json:"values"`
-	Authorizers []*RPCAuthorizerManifest `yaml:"authorizers" json:"authorizers"`
-}
-
 type Manifest struct {
 	Version      string                `yaml:"version" json:"version"` // 1
 	Capabilities []*CapabilityManifest `yaml:"capabilities" json:"capabilities"`
-	Services     []*ServiceManifest    `yaml:"services" json:"services"`
-	Consumers    []*ConsumerManifest   `yaml:"consumers" json:"consumers"`
+	Triggers     []*TriggerManifest    `yaml:"triggers" json:"triggers"`
 	RPCS         []*RPCManifest        `yaml:"rpcs" json:"rpcs"`
+	Consumers    []*ConsumerManifest   `yaml:"consumers" json:"consumers"`
+	Start        []string              `yaml:"start" json:"start"`
 }

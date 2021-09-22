@@ -32,38 +32,38 @@ capabilities:
 
 triggers:
   - trigger: "abesh:httpserver"
-    service: "abesh:ex_echo"
     trigger_values:
       method: "GET"
       path: "/default"
+    service: "abesh:ex_echo"
     authrizer: "abesh:ex_authorizer"
     authorizer_expressin: "allowAll"
 
   - trigger: "abesh:httpserver"
-    service: "abesh:ex_echo"
     trigger_values:
       method: "GET"
       path: "/echo"
+    service: "abesh:ex_echo"
     authrizer: "abesh:ex_authorizer"
     authorizer_expressin: "denyAll"
 
   - trigger: "abesh:httpserver"
-    service: "abesh:ex_httpclient"
     trigger_values:
       method: "GET"
       path: "/httpclient"
+    service: "abesh:ex_httpclient"
 
   - trigger: "abesh:httpserver"
-    service: "abesh:ex_err"
     trigger_values:
       method: "GET"
       path: "/err"
+    service: "abesh:ex_err"
 
 #rpcs:
 #  - rpc: "abesh:ex_rpc"
+#    method: "/test.TestRPC/Add"
 #    authorizer: "abesh:ex_authorizer"
 #    authorizer_expression: "allowAll"
-#    method: "/test.TestRPC/Add"
 
 consumers:
   - source: "abesh:ex_echo"
