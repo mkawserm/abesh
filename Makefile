@@ -19,8 +19,8 @@ protoc:
 			./proto/model/event.proto
 
 
-run:
-	go run main/main.go run --manifest example/manifest.yaml
+run-default:
+	go run main/default/main.go run --manifest example/manifest.yaml
 
-build:
-	go build -o bin/abesh main/main.go
+build-default:
+	go build -o bin/abesh main/default/main.go
