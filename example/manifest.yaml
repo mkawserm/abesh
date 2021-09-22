@@ -37,16 +37,16 @@ triggers:
       method: "GET"
       path: "/default"
     service: "abesh:ex_echo"
-    authrizer: "abesh:ex_authorizer"
-    authorizer_expressin: "allowAll"
+    authorizer: "abesh:ex_authorizer"
+    authorizer_expression: "allowAll"
 
   - trigger: "abesh:httpserver"
     trigger_values:
       method: "GET"
       path: "/echo"
     service: "abesh:ex_echo"
-    authrizer: "abesh:ex_authorizer"
-    authorizer_expressin: "denyAll"
+    authorizer: "abesh:ex_authorizer"
+    authorizer_expression: "denyAll"
 
   - trigger: "abesh:httpserver"
     trigger_values:

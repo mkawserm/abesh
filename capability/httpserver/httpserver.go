@@ -281,6 +281,11 @@ func (h *HTTPServer) AddService(
 	triggerValues model.ConfigMap,
 	service iface.IService) error {
 
+	logger.L(h.ContractId()).Debug("service add",
+		zap.Any("authorizer", authorizer),
+		zap.Any("expression", authorizationExpression),
+		zap.Any("triggerValues", triggerValues))
+
 	var method string
 	var path string
 	//var ok bool

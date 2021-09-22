@@ -312,6 +312,9 @@ func (o *One) configureTriggers(manifest *model.Manifest) error {
 			}
 		}
 
+		logger.L(constant.Name).Debug("trigger information",
+			zap.Any("trigger", s))
+
 		if errLocal := trigger.AddService(authorizer,
 			s.AuthorizerExpression,
 			s.TriggerValues,
