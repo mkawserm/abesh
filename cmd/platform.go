@@ -19,7 +19,11 @@ func PlatformSetup(manifestFilePath string) iface.IPlatform {
 		os.Exit(1)
 	}
 
-	err = DefaultPlatform.Setup(manifest)
+	return PlatformSetupWithManifest(manifest)
+}
+
+func PlatformSetupWithManifest(manifest *model.Manifest) iface.IPlatform {
+	err := DefaultPlatform.Setup(manifest)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
