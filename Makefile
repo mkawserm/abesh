@@ -33,3 +33,9 @@ run-embedded:
 
 test:
 	go test ./... -v
+
+cover:
+	go test ./... -coverprofile=cover.out -v
+
+cover-html:
+	go tool cover -html=cover.out
