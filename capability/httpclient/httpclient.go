@@ -40,11 +40,11 @@ type HTTPClient struct {
 }
 
 func (h *HTTPClient) Name() string {
-	return "golang_net_http_client"
+	return "abesh_httpclient"
 }
 
 func (h *HTTPClient) Version() string {
-	return "0.0.1"
+	return constant.Version
 }
 
 func (h *HTTPClient) Category() string {

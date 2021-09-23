@@ -38,11 +38,11 @@ type HTTPServer struct {
 }
 
 func (h *HTTPServer) Name() string {
-	return "golang_net_http_server"
+	return "abesh_httpserver"
 }
 
 func (h *HTTPServer) Version() string {
-	return "0.0.1"
+	return constant.Version
 }
 
 func (h *HTTPServer) Category() string {

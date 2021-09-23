@@ -42,3 +42,6 @@ cover-html:
 
 run-race:
 	go run -race main/embedded/main.go embedded run
+
+heap-profile:
+	go tool pprof http://localhost:6060/debug/pprof/heap
