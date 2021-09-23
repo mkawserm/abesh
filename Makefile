@@ -19,17 +19,20 @@ protoc:
 			./proto/model/event.proto
 
 
-run-default:
-	go run main/default/main.go run --manifest example/manifest.yaml
-
 build-default:
 	go build -o bin/abesh main/default/main.go
+
+run-default:
+	go run main/default/main.go run --manifest example/manifest.yaml
 
 run-embedded-print-manifest:
 	go run main/embedded/main.go embedded print-manifest
 
 run-embedded:
 	go run main/embedded/main.go embedded run
+
+run-race:
+	go run -race main/embedded/main.go embedded run
 
 test:
 	go test ./... -v
@@ -40,8 +43,14 @@ cover:
 cover-html:
 	go tool cover -html=cover.out
 
-run-race:
-	go run -race main/embedded/main.go embedded run
-
-heap-profile:
+profile-heap:
 	go tool pprof http://localhost:6060/debug/pprof/heap
+
+profile-cpu:
+	go tool pprof http://localhost:6060/debug/pprof/profile?seconds=30
+
+profile-block:
+	go tool pprof http://localhost:6060/debug/pprof/block
+
+profile-mutex:
+	go tool pprof http://localhost:6060/debug/pprof/mutex
