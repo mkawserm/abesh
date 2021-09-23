@@ -31,3 +31,5 @@ run-embedded-print-manifest:
 run-embedded:
 	go run main/embedded/main.go embedded run
 
+test:
+	go test ./... -v
