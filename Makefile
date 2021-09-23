@@ -39,3 +39,6 @@ cover:
 
 cover-html:
 	go tool cover -html=cover.out
+
+run-race:
+	go run -race main/embedded/main.go embedded run
