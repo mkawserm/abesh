@@ -1,6 +1,8 @@
 package main
 
-import "github.com/mkawserm/abesh/cmd"
+import (
+	"github.com/mkawserm/abesh/cmd"
+)
 import _ "github.com/mkawserm/abesh/capability/httpserver"
 import _ "github.com/mkawserm/abesh/capability/httpclient"
 import _ "github.com/mkawserm/abesh/capability/pprof"

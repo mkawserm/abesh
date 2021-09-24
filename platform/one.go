@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 )
@@ -354,6 +355,10 @@ func (o *One) configureRPCS(manifest *model.Manifest) error {
 
 func (o *One) Setup(manifest *model.Manifest) error {
 	timerStart := time.Now()
+	/* SYSTEM INFORMATION */
+	logger.L(constant.Name).Info("Number of cpu", zap.Int("cpu", runtime.NumCPU()))
+	logger.L(constant.Name).Info("Number of go routine", zap.Int("goroutine", runtime.NumGoroutine()))
+
 	var err error
 
 	/* INIT ALL DATA */
@@ -534,6 +539,8 @@ func (o *One) Run() {
 
 	logger.L(constant.Name).Info("run execution time", zap.Duration("seconds", elapsed))
 	// Blocking until the shutdown is complete
+
+	logger.L(constant.Name).Info("Number of go routine", zap.Int("goroutine", runtime.NumGoroutine()))
 	<-idleChan
 
 	logger.L(constant.Name).Info("shutdown complete")
