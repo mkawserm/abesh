@@ -8,7 +8,7 @@ type IAddAuthorizer interface {
 
 type IAddService interface {
 	AddService(authorizer IAuthorizer,
-		authorizationExpression string,
+		authorizerExpression string,
 		triggerValues model.ConfigMap,
 		service IService) error
 }

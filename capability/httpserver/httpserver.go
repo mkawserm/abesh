@@ -277,13 +277,13 @@ func (h *HTTPServer) debugMessage(request *http.Request) {
 
 func (h *HTTPServer) AddService(
 	authorizer iface.IAuthorizer,
-	authorizationExpression string,
+	authorizerExpression string,
 	triggerValues model.ConfigMap,
 	service iface.IService) error {
 
 	logger.L(h.ContractId()).Debug("service add",
 		zap.Any("authorizer", authorizer),
-		zap.Any("expression", authorizationExpression),
+		zap.Any("expression", authorizerExpression),
 		zap.Any("triggerValues", triggerValues))
 
 	var method string
@@ -352,7 +352,7 @@ func (h *HTTPServer) AddService(
 		}
 
 		if authorizer != nil {
-			if !authorizer.IsAuthorized(authorizationExpression, metadata) {
+			if !authorizer.IsAuthorized(authorizerExpression, metadata) {
 				h.s403m(writer, nil)
 				return
 			}
