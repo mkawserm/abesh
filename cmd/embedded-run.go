@@ -9,7 +9,7 @@ var embeddedRunCMD = &cobra.Command{
 	Short: "Run the platform in embedded mode",
 	Long:  "Run all platform components with the embedded manifest as source manifest",
 	Run: func(cmd *cobra.Command, args []string) {
-		p := EmbeddedPlatformSetup(manifestFilePath)
+		p := EmbeddedPlatformSetup(manifestFilePathList)
 		p.Run()
 	},
 }

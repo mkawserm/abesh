@@ -33,18 +33,10 @@ func PlatformSetupWithManifest(manifest *model.Manifest) iface.IPlatform {
 	return DefaultPlatform
 }
 
-func EmbeddedPlatformSetup(manifestFilePath string) iface.IPlatform {
-	var fromManifest *model.Manifest
+func EmbeddedPlatformSetup(manifestFilePathList []string) iface.IPlatform {
+	//var fromManifest *model.Manifest
 	var toManifest *model.Manifest
-
-	if len(manifestFilePath) != 0 {
-		manifest, err := model.GetManifestFromFile(manifestFilePath)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
-		fromManifest = manifest
-	}
+	var currentManifest *model.Manifest
 
 	if len(ManifestBytes) != 0 {
 		manifest, err := model.GetManifestFromBytes(ManifestBytes)
@@ -55,17 +47,29 @@ func EmbeddedPlatformSetup(manifestFilePath string) iface.IPlatform {
 		toManifest = manifest
 	}
 
-	if toManifest == nil && fromManifest == nil {
+	currentManifest = toManifest
+
+	for _, mfp := range manifestFilePathList {
+		if len(mfp) != 0 {
+			manifest, err := model.GetManifestFromFile(mfp)
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
+
+			if currentManifest == nil && manifest != nil {
+				currentManifest = manifest
+			} else {
+				currentManifest = utility.MergeManifest(currentManifest, manifest)
+			}
+		}
+	}
+
+	if currentManifest == nil {
 		fmt.Println("no manifest found")
 		os.Exit(1)
 	}
 
-	if toManifest == nil {
-		toManifest = fromManifest
-		fromManifest = nil
-	}
-
-	currentManifest := utility.MergeManifest(toManifest, fromManifest)
 	p := PlatformSetupWithManifest(currentManifest)
 	return p
 }

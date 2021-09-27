@@ -20,6 +20,9 @@ func MergeManifest(to, from *model.Manifest) *model.Manifest {
 		fromCapability, found := fromCapabilities[capabilityManifest.ContractId]
 		if found {
 			for k, v := range fromCapability.Values {
+				if capabilityManifest.Values == nil {
+					capabilityManifest.Values = make(map[string]string)
+				}
 				capabilityManifest.Values[k] = v
 			}
 		}
