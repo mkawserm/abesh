@@ -16,6 +16,6 @@ var embeddedCMD = &cobra.Command{
 }
 
 func init() {
-	embeddedCMD.PersistentFlags().StringArrayVar(&manifestFilePathList, "manifest", []string{}, "Manifest file path list separated by ',' (ex: /home/manifest1.yaml,/home/manifest2.yaml)")
+	embeddedCMD.PersistentFlags().StringSliceVar(&manifestFilePathList, "manifest", []string{}, "Manifest file path list (ex: /home/manifest1.yaml,/home/manifest2.yaml)")
 	rootCMD.AddCommand(embeddedCMD)
 }

@@ -14,17 +14,8 @@ var embeddedPrintManifestCMD = &cobra.Command{
 	Short: "Print manifest",
 	Long:  "Print currently used manifest combined with the provided manifest",
 	Run: func(cmd *cobra.Command, args []string) {
-		var fromManifest *model.Manifest
 		var toManifest *model.Manifest
-
-		if len(manifestFilePath) != 0 {
-			manifest, err := model.GetManifestFromFile(manifestFilePath)
-			if err != nil {
-				fmt.Println(err.Error())
-				os.Exit(1)
-			}
-			fromManifest = manifest
-		}
+		var currentManifest *model.Manifest
 
 		if len(ManifestBytes) != 0 {
 			manifest, err := model.GetManifestFromBytes(ManifestBytes)
@@ -35,12 +26,28 @@ var embeddedPrintManifestCMD = &cobra.Command{
 			toManifest = manifest
 		}
 
-		if toManifest == nil {
+		currentManifest = toManifest
+
+		for _, mfp := range manifestFilePathList {
+			if len(mfp) != 0 {
+				manifest, err := model.GetManifestFromFile(mfp)
+				if err != nil {
+					fmt.Println(err.Error())
+					os.Exit(1)
+				}
+
+				if currentManifest == nil && manifest != nil {
+					currentManifest = manifest
+				} else {
+					currentManifest = utility.MergeManifest(currentManifest, manifest)
+				}
+			}
+		}
+
+		if currentManifest == nil {
 			fmt.Println("no embedded manifest found")
 			os.Exit(1)
 		}
-
-		currentManifest := utility.MergeManifest(toManifest, fromManifest)
 
 		d, err := yaml.Marshal(currentManifest)
 		if err != nil {
