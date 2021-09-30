@@ -6,8 +6,8 @@ type CapabilityRegistry struct {
 	cr map[string]iface.ICapability
 }
 
-func (c *CapabilityRegistry) RegisterCapability(capability iface.ICapability) {
-	c.cr[capability.ContractId()] = capability
+func (c *CapabilityRegistry) RegisterCapability(contractId string, capability iface.ICapability) {
+	c.cr[contractId] = capability
 }
 
 func (c *CapabilityRegistry) Capability(contractId string) iface.ICapability {

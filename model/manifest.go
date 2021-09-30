@@ -1,8 +1,9 @@
 package model
 
 type CapabilityManifest struct {
-	ContractId string    `yaml:"contract_id" json:"contract_id"`
-	Values     ConfigMap `yaml:"values" json:"values"`
+	ContractId    string    `yaml:"contract_id" json:"contract_id"`
+	NewContractId string    `yaml:"new_contract_id"`
+	Values        ConfigMap `yaml:"values" json:"values"`
 }
 
 type TriggerManifest struct {

@@ -171,6 +171,11 @@ func (o *One) configureCapabilities(manifest *model.Manifest) error {
 			return ErrCapabilityNotFound
 		}
 
+		contractIdAssign := capability.ContractId()
+		if len(v.NewContractId) != 0 {
+			contractIdAssign = v.NewContractId
+		}
+
 		newCapability := capability.New()
 		err = o.callSetConfigMap(newCapability, v.Values)
 		if err != nil {
@@ -184,21 +189,21 @@ func (o *One) configureCapabilities(manifest *model.Manifest) error {
 
 		if capability.Category() == string(constant.CategoryTrigger) {
 			newCapabilityTrigger := newCapability.(iface.ITrigger)
-			o.triggersCapability[newCapability.ContractId()] = newCapabilityTrigger
+			o.triggersCapability[contractIdAssign] = newCapabilityTrigger
 		} else if capability.Category() == string(constant.CategoryRPC) {
 			newCapabilityRPC := newCapability.(iface.IRPC)
-			o.rpcsCapability[newCapability.ContractId()] = newCapabilityRPC
+			o.rpcsCapability[contractIdAssign] = newCapabilityRPC
 		} else if capability.Category() == string(constant.CategoryService) {
 			newCapabilityService := newCapability.(iface.IService)
-			o.servicesCapability[newCapability.ContractId()] = newCapabilityService
+			o.servicesCapability[contractIdAssign] = newCapabilityService
 		} else if capability.Category() == string(constant.CategoryAuthorizer) {
 			newCapabilityAuthorizer := newCapability.(iface.IAuthorizer)
-			o.authorizersCapability[newCapability.ContractId()] = newCapabilityAuthorizer
+			o.authorizersCapability[contractIdAssign] = newCapabilityAuthorizer
 		} else if capability.Category() == string(constant.CategoryConsumer) {
 			newCapabilityConsumer := newCapability.(iface.IConsumer)
-			o.consumersCapability[newCapability.ContractId()] = newCapabilityConsumer
+			o.consumersCapability[contractIdAssign] = newCapabilityConsumer
 		} else {
-			o.capabilityRegistry.RegisterCapability(newCapability)
+			o.capabilityRegistry.RegisterCapability(contractIdAssign, newCapability)
 		}
 	}
 
