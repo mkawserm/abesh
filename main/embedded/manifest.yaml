@@ -37,6 +37,20 @@ capabilities:
       host: "0.0.0.0"
       port: "9091"
 
+  - contract_id: "abesh:httpserver"
+    new_contract_id: "abesh:httpserver:1"
+    values:
+      host: "0.0.0.0"
+      port: "9092"
+      default_request_timeout: "5s"
+      default_content_type: "application/text"
+      default_404_handler_enabled: "true"
+      s500m: "500 error"
+      s404m: "404 error"
+      s403m: "403 error"
+      s405m: "405 error"
+      s408m: "408 request timeout"
+      s499m: "499 request cancelled"
 
 triggers:
   - trigger: "abesh:httpserver"
@@ -67,6 +81,14 @@ triggers:
       path: "/err"
     service: "abesh:ex_err"
 
+  - trigger: "abesh:httpserver:1"
+    trigger_values:
+      method: "GET"
+      path: "/default1"
+    service: "abesh:ex_echo"
+    authorizer: "abesh:ex_authorizer"
+    authorizer_expression: "allowAll"
+
 rpcs:
   - rpc: "abesh:ex_rpc"
     method: "/test.TestRPC/Allow"
@@ -84,4 +106,5 @@ consumers:
 start:
   - "abesh:pprof"
   - "abesh:httpserver"
+  - "abesh:httpserver:1"
   - "abesh:ex_rpc"
