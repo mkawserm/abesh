@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 )
@@ -288,13 +289,17 @@ func (h *HTTPServer) AddService(
 
 	var method string
 	var path string
-	//var ok bool
+	var methodList []string
 
 	if method = triggerValues.String("method", ""); len(method) == 0 {
 		return ErrMethodNotDefined
 	}
 
 	method = strings.ToUpper(strings.TrimSpace(method))
+	methodList = strings.Split(method, ",")
+	if len(methodList) > 0 {
+		sort.Strings(methodList)
+	}
 
 	if path = triggerValues.String("path", ""); len(path) == 0 {
 		return ErrPathNotDefined
@@ -314,7 +319,18 @@ func (h *HTTPServer) AddService(
 
 		defer func() {
 			if r := recover(); r != nil {
-				logger.L(h.ContractId()).Error("recovering from panic")
+				panicMsg := fmt.Sprintf("%v", r)
+				logger.L(h.ContractId()).Info("recovering from panic")
+
+				// add as much information as possible
+				logger.L(h.ContractId()).Error("panic data",
+					zap.String("host_name", request.URL.Hostname()),
+					zap.String("host", request.URL.Host),
+					zap.String("path", request.URL.Path),
+					zap.String("method", request.Method),
+					zap.String("uri", request.RequestURI),
+					zap.String("panic_msg", panicMsg))
+
 				h.s500m(writer, fmt.Errorf("%v", r))
 				return
 			}
@@ -322,7 +338,7 @@ func (h *HTTPServer) AddService(
 
 		h.debugMessage(request)
 
-		if method != request.Method {
+		if !utility.IsIn(methodList, method) {
 			h.s405m(writer, nil)
 			return
 		}

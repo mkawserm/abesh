@@ -52,6 +52,8 @@ capabilities:
       s408m: "408 request timeout"
       s499m: "499 request cancelled"
 
+  - contract_id: "abesh:ex_panic"
+
 triggers:
   - trigger: "abesh:httpserver"
     trigger_values:
@@ -88,6 +90,12 @@ triggers:
     service: "abesh:ex_echo"
     authorizer: "abesh:ex_authorizer"
     authorizer_expression: "allowAll"
+
+  - trigger: "abesh:httpserver"
+    trigger_values:
+      method: "GET"
+      path: "/panic"
+    service: "abesh:ex_panic"
 
 rpcs:
   - rpc: "abesh:ex_rpc"
