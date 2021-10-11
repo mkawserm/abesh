@@ -32,10 +32,9 @@ type HTTPServer struct {
 	mRequestTimeout           time.Duration
 	mDefault404HandlerEnabled bool
 	mValues                   model.ConfigMap
-
-	mHttpServer       *http.Server
-	mHttpServerMux    *http.ServeMux
-	mEventTransmitter iface.IEventTransmitter
+	mHttpServer               *http.Server
+	mHttpServerMux            *http.ServeMux
+	mEventTransmitter         iface.IEventTransmitter
 }
 
 func (h *HTTPServer) Name() string {
