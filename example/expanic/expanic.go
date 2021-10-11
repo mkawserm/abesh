@@ -9,10 +9,9 @@ import (
 	"github.com/mkawserm/abesh/logger"
 	"github.com/mkawserm/abesh/model"
 	"github.com/mkawserm/abesh/registry"
+	stack2 "github.com/mkawserm/abesh/stack"
 	"go.uber.org/zap"
 )
-
-var ErrNothing = errors.New("the nothing err")
 
 type ExPanic struct {
 	mValues map[string]string
@@ -58,10 +57,10 @@ func (e *ExPanic) Serve(_ context.Context, input *model.Event) (event *model.Eve
 			err = errors.New("error from recover")
 			panicMsg := fmt.Sprintf("%v", r)
 			logger.L(e.ContractId()).Info("recovering from panic")
-
+			stack := stack2.BuildStack(1)
 			// add as much information as possible
 			logger.L(e.ContractId()).Error("panic stack trace",
-				zap.String("host_name", input.Metadata.GetPath()),
+				zap.Any("stack", stack2.String(stack)),
 				zap.String("path", input.Metadata.GetPath()),
 				zap.String("method", input.Metadata.GetMethod()),
 				zap.Any("query", input.Metadata.GetQuery()),
