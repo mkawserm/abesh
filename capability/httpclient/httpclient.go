@@ -15,28 +15,22 @@ import (
 )
 
 type HTTPClient struct {
-	mValues model.ConfigMap
-
-	mDialerTimeout       time.Duration
-	mTLSHandshakeTimeout time.Duration
-	mRequestTimeout      time.Duration
-
-	mDisableKeepAlive   bool
-	mDisableCompression bool
-
+	mValues                    model.ConfigMap
+	mDialerTimeout             time.Duration
+	mTLSHandshakeTimeout       time.Duration
+	mRequestTimeout            time.Duration
+	mDisableKeepAlive          bool
+	mDisableCompression        bool
 	mMaxIdleConnections        int
 	mMaxIdleConnectionsPerHost int
 	mMaxConnectionsPerHost     int
-
-	mIdleConnectionTimeout time.Duration
-	mResponseHeaderTimeout time.Duration
-	mExpectContinueTimeout time.Duration
-
-	mMaxResponseHeaderBytes int64
-	mWriteBufferSize        int
-	mReadBufferSize         int
-
-	mHttpClient *http.Client
+	mIdleConnectionTimeout     time.Duration
+	mResponseHeaderTimeout     time.Duration
+	mExpectContinueTimeout     time.Duration
+	mMaxResponseHeaderBytes    int64
+	mWriteBufferSize           int
+	mReadBufferSize            int
+	mHttpClient                *http.Client
 }
 
 func (h *HTTPClient) Name() string {
