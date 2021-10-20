@@ -41,3 +41,22 @@ func Is(err, target IError) bool {
 
 	return false
 }
+
+type IIsRetryable interface {
+	IsRetryable() bool
+}
+
+type IError2 interface {
+	IError
+	IParameters
+	IIsRetryable
+}
+
+// GetError2 type cast to IError2
+func GetError2(anyError interface{}) IError2 {
+	iError, ok := anyError.(IError2)
+	if ok {
+		return iError
+	}
+	return nil
+}
