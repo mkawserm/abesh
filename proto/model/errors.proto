@@ -1,6 +1,6 @@
 syntax = "proto3";
-package errors;
-option go_package = "github.com/mkawserm/abesh/errors;errors";
+package model;
+option go_package = "github.com/mkawserm/abesh/model;model";
 
 message StackFrame {
   string filename = 1;
@@ -13,11 +13,11 @@ message BoolValue {
 }
 
 message Error {
-  uint32 error_code = 1;
-  string error_prefix = 2;
-  string error_message = 3;
-  map<string, string> error_params = 4;
-  BoolValue error_retryable = 5;
+  uint32 code = 1;
+  string prefix = 2;
+  string message = 3;
+  map<string, string> params = 4;
+  BoolValue retryable = 5;
 }
 
 message ErrorWithStack {
