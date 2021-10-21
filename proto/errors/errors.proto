@@ -1,0 +1,26 @@
+syntax = "proto3";
+package errors;
+option go_package = "github.com/mkawserm/abesh/errors;errors";
+
+message StackFrame {
+  string filename = 1;
+  int32 line = 2;
+  string method = 3;
+}
+
+message BoolValue {
+  bool value = 1;
+}
+
+message Error {
+  uint32 error_code = 1;
+  string error_prefix = 2;
+  string error_message = 3;
+  map<string, string> error_params = 4;
+  BoolValue error_retryable = 5;
+}
+
+message ErrorWithStack {
+  Error error = 1;
+  repeated StackFrame stack = 2;
+}

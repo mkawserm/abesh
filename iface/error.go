@@ -42,14 +42,19 @@ func Is(err, target IError) bool {
 	return false
 }
 
-type IIsRetryable interface {
+type IError2 interface {
+	Error() string
+
+	Message() string
+	Code() uint32
+	Prefix() string
+	Params() map[string]string
 	IsRetryable() bool
 }
 
-type IError2 interface {
-	IError
-	IParameters
-	IIsRetryable
+// StatusCode2 generate error status code from IError2
+func StatusCode2(iError IError2) string {
+	return fmt.Sprintf("%s_%d", iError.Prefix(), iError.Code())
 }
 
 // GetError2 type cast to IError2

@@ -21,7 +21,8 @@ protoc:
 			--go_opt=module=github.com/mkawserm/abesh \
 			--go_out=. \
 			./proto/model/metadata.proto \
-			./proto/model/event.proto
+			./proto/model/event.proto \
+			./proto/errors/errors.proto
 
 
 build-default:
