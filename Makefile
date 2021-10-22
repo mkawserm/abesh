@@ -22,7 +22,8 @@ protoc:
 			--go_out=. \
 			./proto/model/metadata.proto \
 			./proto/model/event.proto \
-			./proto/model/errors.proto
+			./proto/model/status.proto \
+			./proto/model/error.proto
 
 
 build-default:

@@ -2,6 +2,8 @@ syntax = "proto3";
 package model;
 option go_package = "github.com/mkawserm/abesh/model;model";
 
+import "model/status.proto";
+
 message StackFrame {
   string filename = 1;
   int32 line = 2;
@@ -13,11 +15,8 @@ message BoolValue {
 }
 
 message Error {
-  uint32 code = 1;
-  string prefix = 2;
-  string message = 3;
-  map<string, string> params = 4;
-  BoolValue retryable = 5;
+  Status status = 1;
+  BoolValue retryable = 2;
 }
 
 message ErrorWithStack {

@@ -1,0 +1,10 @@
+syntax = "proto3";
+package model;
+option go_package = "github.com/mkawserm/abesh/model;model";
+
+message Status {
+  uint32 code = 1;
+  string prefix = 2;
+  string message = 3;
+  map<string, string> params = 4;
+}
