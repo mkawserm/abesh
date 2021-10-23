@@ -88,6 +88,30 @@ func (v ConfigMap) Uint(key string, defaultValue uint) uint {
 	return defaultValue
 }
 
+func (v ConfigMap) Int8(key string, defaultValue int8) int8 {
+	if o, ok := v[key]; ok {
+		i, err := strconv.ParseInt(o, 10, 8)
+		if err != nil {
+			return defaultValue
+		}
+
+		return int8(i)
+	}
+	return defaultValue
+}
+
+func (v ConfigMap) Uint8(key string, defaultValue uint8) uint8 {
+	if o, ok := v[key]; ok {
+		i, err := strconv.ParseUint(o, 10, 8)
+		if err != nil {
+			return defaultValue
+		}
+
+		return uint8(i)
+	}
+	return defaultValue
+}
+
 func (v ConfigMap) Int16(key string, defaultValue int16) int16 {
 	if o, ok := v[key]; ok {
 		i, err := strconv.ParseInt(o, 10, 16)

@@ -137,6 +137,38 @@ func TestConfigMap_Uint(t *testing.T) {
 	}
 }
 
+func TestConfigMap_Int8(t *testing.T) {
+	v := ConfigMap{"n": "100", "n2": "one"}
+
+	if v.Int8("n", 0) != 100 {
+		t.Error("n should be 100")
+	}
+
+	if v.Int8("n2", 1) != 1 {
+		t.Error("output should be default 1")
+	}
+
+	if v.Int8("n3", 1) != 1 {
+		t.Error("output should be default 1")
+	}
+}
+
+func TestConfigMap_Uint8(t *testing.T) {
+	v := ConfigMap{"n": "100", "n2": "one"}
+
+	if v.Uint8("n", 0) != 100 {
+		t.Error("n should be 100")
+	}
+
+	if v.Uint8("n2", 1) != 1 {
+		t.Error("output should be default 1")
+	}
+
+	if v.Uint8("n3", 1) != 1 {
+		t.Error("output should be default 1")
+	}
+}
+
 func TestConfigMap_Int16(t *testing.T) {
 	v := ConfigMap{"n": "100", "n2": "one"}
 
