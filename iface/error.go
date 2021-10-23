@@ -45,16 +45,16 @@ func Is(err, target IError) bool {
 type IError2 interface {
 	Error() string
 
-	Message() string
-	Code() uint32
-	Prefix() string
-	Params() map[string]string
+	GetMessage() string
+	GetCode() uint32
+	GetPrefix() string
+	GetParams() map[string]string
 	IsRetryable() bool
 }
 
 // StatusCode2 generate error status code from IError2
 func StatusCode2(iError IError2) string {
-	return fmt.Sprintf("%s_%d", iError.Prefix(), iError.Code())
+	return fmt.Sprintf("%s_%d", iError.GetPrefix(), iError.GetCode())
 }
 
 // GetError2 type cast to IError2
@@ -64,4 +64,13 @@ func GetError2(anyError interface{}) IError2 {
 		return iError
 	}
 	return nil
+}
+
+// Is2 checks error with target error
+func Is2(err, target IError2) bool {
+	if err.GetCode() == target.GetCode() && err.GetPrefix() == target.GetPrefix() {
+		return true
+	}
+
+	return false
 }
