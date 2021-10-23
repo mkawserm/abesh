@@ -27,14 +27,28 @@ type EventResponse struct {
 }
 
 type HTTPServer struct {
-	mHost                     string
-	mPort                     string
-	mRequestTimeout           time.Duration
+	mHost     string
+	mPort     string
+	mCertFile string
+	mKeyFile  string
+
 	mDefault404HandlerEnabled bool
 	mValues                   model.ConfigMap
 	mHttpServer               *http.Server
 	mHttpServerMux            *http.ServeMux
 	mEventTransmitter         iface.IEventTransmitter
+
+	mRequestTimeout     time.Duration
+	mDefaultContentType string
+
+	d401m string
+	d403m string
+	d404m string
+	d405m string
+	d408m string
+	d409m string
+	d499m string
+	d500m string
 }
 
 func (h *HTTPServer) Name() string {
@@ -57,13 +71,59 @@ func (h *HTTPServer) GetConfigMap() model.ConfigMap {
 	return h.mValues
 }
 
+func (h *HTTPServer) buildDefaultMessage(code uint32) string {
+	return fmt.Sprintf(`
+		{
+			"code": "SE_%d",
+			"lang": "en",
+			"message": "%d ERROR",
+			"data": {}
+		}
+	`, code, code)
+}
+
 func (h *HTTPServer) SetConfigMap(values model.ConfigMap) error {
 	h.mValues = values
+
 	h.mHost = h.mValues.String("host", "0.0.0.0")
 	h.mPort = h.mValues.String("port", "8080")
+
+	h.mCertFile = values.String("cert_file", "")
+	h.mKeyFile = values.String("key_file", "")
+
 	h.mRequestTimeout = h.mValues.Duration("default_request_timeout", time.Second)
 	h.mDefault404HandlerEnabled = h.mValues.Bool("default_404_handler_enabled", true)
+	h.mDefaultContentType = values.String("default_content_type", "application/json")
+
+	h.d401m = h.buildDefaultMessage(401)
+	h.d403m = h.buildDefaultMessage(403)
+	h.d404m = h.buildDefaultMessage(404)
+	h.d405m = h.buildDefaultMessage(405)
+	h.d408m = h.buildDefaultMessage(408)
+	h.d409m = h.buildDefaultMessage(409)
+	h.d499m = h.buildDefaultMessage(499)
+	h.d500m = h.buildDefaultMessage(500)
+
 	return nil
+}
+
+func (h *HTTPServer) getMessage(key, defaultValue, lang string) string {
+	data := h.mValues.String(fmt.Sprintf("%s_%s", key, lang), "")
+
+	if len(data) == 0 {
+		data = h.mValues.String(key, defaultValue)
+	}
+
+	return data
+}
+
+func (h *HTTPServer) getLanguage(r *http.Request) string {
+	l := r.Header.Get("Accept-Language")
+	if len(l) == 0 {
+		l = "en"
+	}
+
+	return l
 }
 
 func (h *HTTPServer) SetEventTransmitter(eventTransmitter iface.IEventTransmitter) error {
@@ -99,7 +159,7 @@ func (h *HTTPServer) Setup() error {
 				logger.L(h.ContractId()).Debug("request execution time", zap.Duration("seconds", elapsed))
 			}()
 
-			h.s404m(writer, nil)
+			h.s404m(request, writer, nil)
 			return
 		})
 	}
@@ -113,8 +173,15 @@ func (h *HTTPServer) Setup() error {
 
 func (h *HTTPServer) Start(_ context.Context) error {
 	logger.L(h.ContractId()).Info("http server started at " + h.mHttpServer.Addr)
-	if err := h.mHttpServer.ListenAndServe(); err != http.ErrServerClosed {
-		return err
+
+	if len(h.mCertFile) != 0 && len(h.mKeyFile) != 0 {
+		if err := h.mHttpServer.ListenAndServeTLS(h.mCertFile, h.mKeyFile); err != http.ErrServerClosed {
+			return err
+		}
+	} else {
+		if err := h.mHttpServer.ListenAndServe(); err != http.ErrServerClosed {
+			return err
+		}
 	}
 
 	return nil
@@ -157,7 +224,7 @@ func (h *HTTPServer) TransmitOutputEvent(contractId string, outputEvent *model.E
 	}
 }
 
-func (h *HTTPServer) s403m(writer http.ResponseWriter, errLocal error) {
+func (h *HTTPServer) writeMessage(statusCode int, defaultMessage string, request *http.Request, writer http.ResponseWriter, errLocal error) {
 	if errLocal != nil {
 		logger.L(h.ContractId()).Error(errLocal.Error(),
 			zap.String("version", h.Version()),
@@ -165,9 +232,9 @@ func (h *HTTPServer) s403m(writer http.ResponseWriter, errLocal error) {
 			zap.String("contract_id", h.ContractId()))
 	}
 
-	writer.Header().Add("Content-Type", h.mValues.String("default_content_type", "application/text"))
-	writer.WriteHeader(http.StatusForbidden)
-	if _, err := writer.Write([]byte(h.mValues.String("s403m", "403 ERROR"))); err != nil {
+	writer.Header().Add("Content-Type", h.mDefaultContentType)
+	writer.WriteHeader(statusCode)
+	if _, err := writer.Write([]byte(h.getMessage(fmt.Sprintf("s%dm", statusCode), defaultMessage, h.getLanguage(request)))); err != nil {
 		logger.L(h.ContractId()).Error(err.Error(),
 			zap.String("version", h.Version()),
 			zap.String("name", h.Name()),
@@ -175,95 +242,28 @@ func (h *HTTPServer) s403m(writer http.ResponseWriter, errLocal error) {
 	}
 }
 
-func (h *HTTPServer) s404m(writer http.ResponseWriter, errLocal error) {
-	if errLocal != nil {
-		logger.L(h.ContractId()).Error(errLocal.Error(),
-			zap.String("version", h.Version()),
-			zap.String("name", h.Name()),
-			zap.String("contract_id", h.ContractId()))
-	}
-
-	writer.Header().Add("Content-Type", h.mValues.String("default_content_type", "application/text"))
-	writer.WriteHeader(http.StatusNotFound)
-	if _, err := writer.Write([]byte(h.mValues.String("s404m", "404 ERROR"))); err != nil {
-		logger.L(h.ContractId()).Error(err.Error(),
-			zap.String("version", h.Version()),
-			zap.String("name", h.Name()),
-			zap.String("contract_id", h.ContractId()))
-	}
+func (h *HTTPServer) s403m(request *http.Request, writer http.ResponseWriter, errLocal error) {
+	h.writeMessage(403, h.d403m, request, writer, errLocal)
 }
 
-func (h *HTTPServer) s405m(writer http.ResponseWriter, errLocal error) {
-	if errLocal != nil {
-		logger.L(h.ContractId()).Error(errLocal.Error(),
-			zap.String("version", h.Version()),
-			zap.String("name", h.Name()),
-			zap.String("contract_id", h.ContractId()))
-	}
-
-	writer.Header().Add("Content-Type", h.mValues.String("default_content_type", "application/text"))
-	writer.WriteHeader(http.StatusMethodNotAllowed)
-	if _, err := writer.Write([]byte(h.mValues.String("s405m", "405 ERROR"))); err != nil {
-		logger.L(h.ContractId()).Error(err.Error(),
-			zap.String("version", h.Version()),
-			zap.String("name", h.Name()),
-			zap.String("contract_id", h.ContractId()))
-	}
+func (h *HTTPServer) s404m(request *http.Request, writer http.ResponseWriter, errLocal error) {
+	h.writeMessage(404, h.d404m, request, writer, errLocal)
 }
 
-func (h *HTTPServer) s408m(writer http.ResponseWriter, errLocal error) {
-	if errLocal != nil {
-		logger.L(h.ContractId()).Error(errLocal.Error(),
-			zap.String("version", h.Version()),
-			zap.String("name", h.Name()),
-			zap.String("contract_id", h.ContractId()))
-	}
-
-	writer.Header().Add("Content-Type", h.mValues.String("default_content_type", "application/text"))
-	writer.WriteHeader(http.StatusRequestTimeout)
-	if _, err := writer.Write([]byte(h.mValues.String("s408m", "408 ERROR"))); err != nil {
-		logger.L(h.ContractId()).Error(err.Error(),
-			zap.String("version", h.Version()),
-			zap.String("name", h.Name()),
-			zap.String("contract_id", h.ContractId()))
-	}
+func (h *HTTPServer) s405m(request *http.Request, writer http.ResponseWriter, errLocal error) {
+	h.writeMessage(405, h.d405m, request, writer, errLocal)
 }
 
-func (h *HTTPServer) s499m(writer http.ResponseWriter, errLocal error) {
-	if errLocal != nil {
-		logger.L(h.ContractId()).Error(errLocal.Error(),
-			zap.String("version", h.Version()),
-			zap.String("name", h.Name()),
-			zap.String("contract_id", h.ContractId()))
-	}
-
-	writer.Header().Add("Content-Type", h.mValues.String("default_content_type", "application/text"))
-	writer.WriteHeader(499)
-
-	if _, err := writer.Write([]byte(h.mValues.String("s499m", "499 ERROR"))); err != nil {
-		logger.L(h.ContractId()).Error(err.Error(),
-			zap.String("version", h.Version()),
-			zap.String("name", h.Name()),
-			zap.String("contract_id", h.ContractId()))
-	}
+func (h *HTTPServer) s408m(request *http.Request, writer http.ResponseWriter, errLocal error) {
+	h.writeMessage(408, h.d408m, request, writer, errLocal)
 }
 
-func (h *HTTPServer) s500m(writer http.ResponseWriter, errLocal error) {
-	if errLocal != nil {
-		logger.L(h.ContractId()).Error(errLocal.Error(),
-			zap.String("version", h.Version()),
-			zap.String("name", h.Name()),
-			zap.String("contract_id", h.ContractId()))
-	}
+func (h *HTTPServer) s499m(request *http.Request, writer http.ResponseWriter, errLocal error) {
+	h.writeMessage(499, h.d499m, request, writer, errLocal)
+}
 
-	writer.Header().Add("Content-Type", h.mValues.String("default_content_type", "application/text"))
-	writer.WriteHeader(http.StatusInternalServerError)
-	if _, err := writer.Write([]byte(h.mValues.String("s500m", "500 ERROR"))); err != nil {
-		logger.L(h.ContractId()).Error(err.Error(),
-			zap.String("version", h.Version()),
-			zap.String("name", h.Name()),
-			zap.String("contract_id", h.ContractId()))
-	}
+func (h *HTTPServer) s500m(request *http.Request, writer http.ResponseWriter, errLocal error) {
+	h.writeMessage(500, h.d500m, request, writer, errLocal)
 }
 
 func (h *HTTPServer) debugMessage(request *http.Request) {
@@ -330,7 +330,7 @@ func (h *HTTPServer) AddService(
 					zap.String("uri", request.RequestURI),
 					zap.String("panic_msg", panicMsg))
 
-				h.s500m(writer, fmt.Errorf("%v", r))
+				h.s500m(request, writer, fmt.Errorf("%v", r))
 				return
 			}
 		}()
@@ -338,7 +338,7 @@ func (h *HTTPServer) AddService(
 		h.debugMessage(request)
 
 		if !utility.IsIn(methodList, method) {
-			h.s405m(writer, nil)
+			h.s405m(request, writer, nil)
 			return
 		}
 
@@ -368,13 +368,13 @@ func (h *HTTPServer) AddService(
 
 		if authorizer != nil {
 			if !authorizer.IsAuthorized(authorizerExpression, metadata) {
-				h.s403m(writer, nil)
+				h.s403m(request, writer, nil)
 				return
 			}
 		}
 
 		if data, err = ioutil.ReadAll(request.Body); err != nil {
-			h.s500m(writer, err)
+			h.s500m(request, writer, err)
 			return
 		}
 
@@ -408,21 +408,21 @@ func (h *HTTPServer) AddService(
 
 		select {
 		case <-nCtx.Done():
-			h.s408m(writer, nil)
+			h.s408m(request, writer, nil)
 			return
 		case r := <-ch:
 			if r.Error == context.DeadlineExceeded {
-				h.s408m(writer, r.Error)
+				h.s408m(request, writer, r.Error)
 				return
 			}
 
 			if r.Error == context.Canceled {
-				h.s499m(writer, r.Error)
+				h.s499m(request, writer, r.Error)
 				return
 			}
 
 			if r.Error != nil {
-				h.s500m(writer, r.Error)
+				h.s500m(request, writer, r.Error)
 				return
 			}
 
