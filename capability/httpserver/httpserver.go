@@ -330,7 +330,7 @@ func (h *HTTPServer) AddService(
 					zap.String("uri", request.RequestURI),
 					zap.String("panic_msg", panicMsg))
 
-				h.s500m(request, writer, fmt.Errorf("%v", r))
+				h.s500m(request, writer, nil)
 				return
 			}
 		}()
