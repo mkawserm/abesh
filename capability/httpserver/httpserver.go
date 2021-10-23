@@ -341,7 +341,7 @@ func (h *HTTPServer) AddService(
 
 		h.debugMessage(request)
 
-		if !utility.IsIn(methodList, method) {
+		if !utility.IsIn(methodList, request.Method) {
 			h.s405m(request, writer, nil)
 			return
 		}
