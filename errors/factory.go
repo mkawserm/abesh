@@ -140,7 +140,7 @@ func NewWithAllInfo(code uint32, prefix string, message string, params map[strin
 	return e
 }
 
-func NewFromSource(source *Error) *Error {
+func NewFromError(source *Error) *Error {
 	e := &Error{
 		errorModel: &model.Error{
 			Status: &model.Status{

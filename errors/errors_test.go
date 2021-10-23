@@ -11,7 +11,7 @@ func TestError_ProtoErrorWithStack(t *testing.T) {
 	t.Logf("%+v\n", ErrTest.StackString())
 	t.Logf("%+v\n", NewInternalErrorWithCause(errors.New("test"), "just test", nil, "missing").StackString())
 
-	t.Logf("%+v\n", NewFromSource(ErrTest).StackString())
+	t.Logf("%+v\n", NewFromError(ErrTest).StackString())
 }
 
 func TestError_IsRetryable(t *testing.T) {
