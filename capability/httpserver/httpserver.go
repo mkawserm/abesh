@@ -242,6 +242,10 @@ func (h *HTTPServer) writeMessage(statusCode int, defaultMessage string, request
 	}
 }
 
+func (h *HTTPServer) s401m(request *http.Request, writer http.ResponseWriter, errLocal error) {
+	h.writeMessage(401, h.d401m, request, writer, errLocal)
+}
+
 func (h *HTTPServer) s403m(request *http.Request, writer http.ResponseWriter, errLocal error) {
 	h.writeMessage(403, h.d403m, request, writer, errLocal)
 }
