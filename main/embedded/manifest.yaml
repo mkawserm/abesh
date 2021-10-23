@@ -9,14 +9,6 @@ capabilities:
       host: "0.0.0.0"
       port: "9090"
       default_request_timeout: "5s"
-      default_content_type: "application/text"
-      default_404_handler_enabled: "true"
-      s500m: "500 error"
-      s404m: "404 error"
-      s403m: "403 error"
-      s405m: "405 error"
-      s408m: "408 request timeout"
-      s499m: "499 request cancelled"
 
   - contract_id: "abesh:ex_authorizer"
 
@@ -45,12 +37,6 @@ capabilities:
       default_request_timeout: "5s"
       default_content_type: "application/text"
       default_404_handler_enabled: "true"
-      s500m: "500 error"
-      s404m: "404 error"
-      s403m: "403 error"
-      s405m: "405 error"
-      s408m: "408 request timeout"
-      s499m: "499 request cancelled"
 
   - contract_id: "abesh:ex_panic"
 
