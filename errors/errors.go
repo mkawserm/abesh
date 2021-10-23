@@ -194,7 +194,7 @@ func (x *Error) ProtoStack() []*model.StackFrame {
 	return sf
 }
 
-func (x *Error) ProtoErrorWithStack() *model.ErrorWithStack {
+func (x *Error) ToProtoErrorWithStack() *model.ErrorWithStack {
 	return &model.ErrorWithStack{
 		Error: x.errorModel,
 		Stack: x.ProtoStack(),
@@ -296,7 +296,7 @@ func Propagate(errInput error) error {
 	}
 }
 
-func Is(errInput error, prefix ...string) bool {
+func IsPrefixMatches(errInput error, prefix ...string) bool {
 	switch err := errInput.(type) {
 	case *Error:
 		if err.PrefixMatches(prefix...) {
@@ -306,8 +306,17 @@ func Is(errInput error, prefix ...string) bool {
 		if next == nil {
 			return false
 		}
-		return Is(next, prefix...)
+		return IsPrefixMatches(next, prefix...)
 	default:
 		return false
 	}
+}
+
+// Is checks error with target error
+func Is(source, target *Error) bool {
+	if source.GetCode() == target.GetCode() && source.GetPrefix() == target.GetPrefix() {
+		return true
+	}
+
+	return false
 }
