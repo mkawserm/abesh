@@ -10,7 +10,7 @@ import (
 )
 
 // Generic error codes. Each of these has their own constructor for convenience.
-// You can use any string as a code, just use the `New` method.
+// You can use any string as a prefix, just use the `NewError` method.
 const (
 	ErrBadRequest         = "bad_request"
 	ErrBadResponse        = "bad_response"
@@ -118,7 +118,7 @@ func (x *Error) PrefixMatches(prefixParts ...string) bool {
 }
 
 func PrefixMatches(err error, prefixParts ...string) bool {
-	if terr, ok := Wrap(err, nil).(*Error); ok {
+	if terr, ok := Augment(err, "", nil).(*Error); ok {
 		return terr.PrefixMatches(prefixParts...)
 	}
 
@@ -214,26 +214,6 @@ func (x *Error) FromProtoErrorWithStack(input *model.ErrorWithStack) {
 	}
 }
 
-func New(code uint32, prefix string, message string, params map[string]string, retryable bool) *Error {
-	e := &Error{
-		errorModel: &model.Error{
-			Status: &model.Status{
-				Code:    code,
-				Prefix:  prefix,
-				Message: message,
-				Params:  params,
-			},
-			Retryable: &model.BoolValue{
-				Value: retryable,
-			},
-		},
-	}
-
-	e.stackFrames = stack.BuildStack(3)
-
-	return e
-}
-
 // addParams returns a new error with new params merged into the original error's
 func addParams(err *Error, params map[string]string) *Error {
 	copiedParams := make(map[string]string, len(err.GetParams())+len(params))
@@ -278,6 +258,7 @@ func Augment(errInput error, context string, params map[string]string) error {
 			},
 			stackFrames: stack.Stack{},
 		}
+		e.cause = err
 		return e
 	default:
 		return NewInternalWithCause(err, context, params, "")

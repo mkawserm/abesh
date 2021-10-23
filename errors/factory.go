@@ -20,22 +20,6 @@ func NewInternalWithCause(err error, message string, params map[string]string, s
 	return newErr
 }
 
-func Wrap(err error, params map[string]string) error {
-	return WrapWithPrefix(err, params, 400, ErrInternalService)
-}
-
-func WrapWithPrefix(errInput error, params map[string]string, code uint32, prefix string) error {
-	if errInput == nil {
-		return nil
-	}
-	switch err := errInput.(type) {
-	case *Error:
-		return addParams(err, params)
-	default:
-		return errorFactory(code, prefix, err.Error(), params)
-	}
-}
-
 func errorFactory(code uint32, prefix string, message string, params map[string]string) *Error {
 	e := &Error{
 		errorModel: &model.Error{
@@ -134,4 +118,49 @@ func errCode(prefix, sub string) string {
 		return sub
 	}
 	return strings.Join([]string{prefix, sub}, ".")
+}
+
+func NewError(code uint32, prefix string, message string, params map[string]string, retryable bool) *Error {
+	e := &Error{
+		errorModel: &model.Error{
+			Status: &model.Status{
+				Code:    code,
+				Prefix:  prefix,
+				Message: message,
+				Params:  params,
+			},
+			Retryable: &model.BoolValue{
+				Value: retryable,
+			},
+		},
+	}
+
+	e.stackFrames = stack.BuildStack(2)
+
+	return e
+}
+
+func NewErrorFromSource(source *Error) *Error {
+	e := &Error{
+		errorModel: &model.Error{
+			Status: &model.Status{
+				Code:    source.GetCode(),
+				Prefix:  source.GetPrefix(),
+				Message: source.GetMessage(),
+				Params:  source.GetParams(),
+			},
+			Retryable: &model.BoolValue{
+				Value: source.IsRetryable(),
+			},
+		},
+	}
+
+	e.stackFrames = stack.BuildStack(2)
+	return e
+}
+
+// New creates a new error for you. Use this if you want to pass along a custom error code.
+// Otherwise, use the handy shorthand factories below
+func New(code uint32, prefix string, message string, params map[string]string) *Error {
+	return errorFactory(code, prefix, message, params)
 }
