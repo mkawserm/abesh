@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-func NewInternalWithCause(err error, message string, params map[string]string, subCode string) *Error {
-	newErr := errorFactory(400, errCode(ErrInternalService, subCode), message, params)
+func NewInternalErrorWithCause(err error, message string, params map[string]string, subCode string) *Error {
+	newErr := errorFactory(444, errCode(ErrInternalService, subCode), message, params)
 	newErr.cause = err
 
 	switch v := err.(type) {
@@ -120,7 +120,7 @@ func errCode(prefix, sub string) string {
 	return strings.Join([]string{prefix, sub}, ".")
 }
 
-func NewError(code uint32, prefix string, message string, params map[string]string, retryable bool) *Error {
+func NewWithAllInfo(code uint32, prefix string, message string, params map[string]string, retryable bool) *Error {
 	e := &Error{
 		errorModel: &model.Error{
 			Status: &model.Status{
@@ -140,7 +140,7 @@ func NewError(code uint32, prefix string, message string, params map[string]stri
 	return e
 }
 
-func NewErrorFromSource(source *Error) *Error {
+func NewFromSource(source *Error) *Error {
 	e := &Error{
 		errorModel: &model.Error{
 			Status: &model.Status{

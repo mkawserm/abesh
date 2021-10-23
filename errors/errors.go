@@ -10,7 +10,7 @@ import (
 )
 
 // Generic error codes. Each of these has their own constructor for convenience.
-// You can use any string as a prefix, just use the `NewError` method.
+// You can use any string as a prefix, just use the `NewWithAllInfo` method.
 const (
 	ErrBadRequest         = "bad_request"
 	ErrBadResponse        = "bad_response"
@@ -261,7 +261,7 @@ func Augment(errInput error, context string, params map[string]string) error {
 		e.cause = err
 		return e
 	default:
-		return NewInternalWithCause(err, context, params, "")
+		return NewInternalErrorWithCause(err, context, params, "")
 	}
 }
 
@@ -273,7 +273,7 @@ func Propagate(errInput error) error {
 	case *Error:
 		return err
 	default:
-		return NewInternalWithCause(err, err.Error(), nil, "")
+		return NewInternalErrorWithCause(err, err.Error(), nil, "")
 	}
 }
 

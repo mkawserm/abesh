@@ -5,13 +5,13 @@ import (
 	"testing"
 )
 
-var ErrTest = NewError(1, "T", "failed", map[string]string{}, true)
+var ErrTest = NewWithAllInfo(1, "T", "failed", map[string]string{}, true)
 
 func TestError_ProtoErrorWithStack(t *testing.T) {
 	t.Logf("%+v\n", ErrTest.StackString())
-	t.Logf("%+v\n", NewInternalWithCause(errors.New("test"), "just test", nil, "missing").StackString())
+	t.Logf("%+v\n", NewInternalErrorWithCause(errors.New("test"), "just test", nil, "missing").StackString())
 
-	t.Logf("%+v\n", NewErrorFromSource(ErrTest).StackString())
+	t.Logf("%+v\n", NewFromSource(ErrTest).StackString())
 }
 
 func TestError_IsRetryable(t *testing.T) {
