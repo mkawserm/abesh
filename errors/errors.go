@@ -10,7 +10,7 @@ import (
 )
 
 // Generic error codes. Each of these has their own constructor for convenience.
-// You can use any string as a prefix, just use the `NewWithAllInfo` method.
+// You can use any string as a prefix, just use the `New` method.
 const (
 	ErrBadRequest         = "bad_request"
 	ErrBadResponse        = "bad_response"
