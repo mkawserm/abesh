@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/mkawserm/abesh/errors"
 	"github.com/mkawserm/abesh/model"
+	"golang.org/x/text/language"
 )
 
 func GetLanguage(headers map[string]string) string {
@@ -13,6 +14,18 @@ func GetLanguage(headers map[string]string) string {
 		if !found {
 			lang = "en"
 		}
+	}
+
+	tag, _, err := language.ParseAcceptLanguage(lang)
+	if err != nil {
+		lang = "en"
+	}
+
+	for i := range tag {
+		if len(tag[i].String()) != 2 {
+			lang = tag[i].String()[0:2]
+		}
+		break
 	}
 
 	return lang
