@@ -1,9 +1,13 @@
 package utility
 
-import "sort"
-
-// IsIn finds value in the dataList.
-// dataList must be sorted
+// IsIn check if the value exists in the dataList
+// don't use it for large data set
+// time complexity O(n) because of linear scan
 func IsIn(dataList []string, value string) bool {
-	return sort.SearchStrings(dataList, value) != len(dataList)
+	for _, v := range dataList {
+		if v == value {
+			return true
+		}
+	}
+	return false
 }
