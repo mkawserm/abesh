@@ -507,12 +507,12 @@ func (o *One) Run() {
 
 		logger.L(constant.Name).Info("preparing for shutdown")
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
+		//ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		//defer cancel()
 
 		logger.L(constant.Name).Info("closing all capabilities")
 		for _, c := range o.startCapabilityList {
-			err := o.callStop(ctx, c)
+			err := o.callStop(context.Background(), c)
 			if err != nil {
 				logger.L(constant.Name).Error(err.Error())
 			}
@@ -531,7 +531,7 @@ func (o *One) Run() {
 	for _, c := range o.startCapabilityList {
 		capability := c
 		go func() {
-			err := o.callStart(context.TODO(), capability)
+			err := o.callStart(context.Background(), capability)
 			if err != nil {
 				logger.L(constant.Name).Error(err.Error())
 			}
