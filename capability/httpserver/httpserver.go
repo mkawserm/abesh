@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -31,6 +32,10 @@ type HTTPServer struct {
 	mPort     string
 	mCertFile string
 	mKeyFile  string
+
+	mStaticDir  string
+	mStaticPath string
+	mHealthPath string
 
 	mDefault404HandlerEnabled bool
 	mValues                   model.ConfigMap
@@ -91,6 +96,10 @@ func (h *HTTPServer) SetConfigMap(values model.ConfigMap) error {
 	h.mCertFile = values.String("cert_file", "")
 	h.mKeyFile = values.String("key_file", "")
 
+	h.mStaticDir = values.String("static_dir", "")
+	h.mStaticPath = values.String("static_path", "/static/")
+	h.mHealthPath = values.String("health_path", "")
+
 	h.mRequestTimeout = h.mValues.Duration("default_request_timeout", time.Second)
 	h.mDefault404HandlerEnabled = h.mValues.Bool("default_404_handler_enabled", true)
 	h.mDefaultContentType = values.String("default_content_type", "application/json")
@@ -139,6 +148,14 @@ func (h *HTTPServer) New() iface.ICapability {
 	return &HTTPServer{}
 }
 
+func (h *HTTPServer) AddHandlerFunc(pattern string, handler http.HandlerFunc) {
+	h.mHttpServerMux.HandleFunc(pattern, handler)
+}
+
+func (h *HTTPServer) AddHandler(pattern string, handler http.Handler) {
+	h.mHttpServerMux.Handle(pattern, handler)
+}
+
 func (h *HTTPServer) Setup() error {
 	h.mHttpServer = new(http.Server)
 	h.mHttpServerMux = new(http.ServeMux)
@@ -161,6 +178,30 @@ func (h *HTTPServer) Setup() error {
 
 			h.s404m(request, writer, nil)
 			return
+		})
+	}
+
+	// register static path
+	if len(h.mStaticDir) != 0 {
+		fi, e := os.Stat(h.mStaticDir)
+
+		if e != nil {
+			logger.L(h.ContractId()).Error(e.Error())
+		} else {
+			if fi.IsDir() {
+				logger.L(h.ContractId()).Debug("static path", zap.String("static_path", h.mStaticPath))
+				h.mHttpServerMux.Handle(h.mStaticPath, http.StripPrefix(h.mStaticPath, http.FileServer(http.Dir(h.mStaticDir))))
+			} else {
+				logger.L(h.ContractId()).Error("provided static_dir in the manifest conf is not directory")
+			}
+		}
+	}
+
+	// register health path
+	if len(h.mHealthPath) != 0 {
+		h.mHttpServerMux.HandleFunc(h.mHealthPath, func(writer http.ResponseWriter, _ *http.Request) {
+			writer.WriteHeader(http.StatusOK)
+			logger.L(h.ContractId()).Info("HEALTH OK")
 		})
 	}
 
