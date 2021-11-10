@@ -13,8 +13,8 @@ import (
 	"go.uber.org/zap"
 )
 
-var SuccessStatus = status.New(1, "A_H", "OK", map[string]string{})
-var FailedStatus = errors.New(1, "A_H_F", "NOT OK", map[string]string{})
+var SuccessStatus = status.New(1, "ABESH_HEALTH_S", "OK", map[string]string{})
+var FailedStatus = errors.New(1, "ABESH_HEALTH_F", "NOT OK", map[string]string{})
 
 type Health struct {
 	mCM                 model.ConfigMap
