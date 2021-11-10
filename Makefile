@@ -39,6 +39,9 @@ run-embedded-print-manifest:
 run-embedded:
 	go run main/embedded/main.go embedded run
 
+run-embedded2:
+	go run main/embedded/main.go embedded-run2
+
 run-race:
 	go run -race main/embedded/main.go embedded run
 

@@ -15,7 +15,7 @@ var runCMD = &cobra.Command{
 }
 
 func init() {
-	runCMD.Flags().StringVar(&manifestFilePath, "manifest", "", "Manifest file path (ex: /home/ubuntu/manifest.yaml)")
+	runCMD.Flags().StringVar(&manifestFilePath, "manifest", "", "Manifest file path (ex: /home/ubuntu/data.txt)")
 	_ = runCMD.MarkFlagRequired("manifest")
 	rootCMD.AddCommand(runCMD)
 }

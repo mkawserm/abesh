@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 	"github.com/mkawserm/abesh/constant"
@@ -45,6 +46,8 @@ type HTTPServer struct {
 
 	mRequestTimeout     time.Duration
 	mDefaultContentType string
+
+	mEmbeddedStaticFSMap map[string]embed.FS
 
 	d401m string
 	d403m string
@@ -97,7 +100,7 @@ func (h *HTTPServer) SetConfigMap(values model.ConfigMap) error {
 	h.mKeyFile = values.String("key_file", "")
 
 	h.mStaticDir = values.String("static_dir", "")
-	h.mStaticPath = values.String("static_path", "/static/")
+	h.mStaticPath = values.String("static_path", "/data/")
 	h.mHealthPath = values.String("health_path", "")
 
 	h.mRequestTimeout = h.mValues.Duration("default_request_timeout", time.Second)
@@ -144,6 +147,11 @@ func (h *HTTPServer) GetEventTransmitter() iface.IEventTransmitter {
 	return h.mEventTransmitter
 }
 
+func (h *HTTPServer) AddEmbeddedStaticFS(pattern string, fs embed.FS) {
+	// NOTE: must be called after setup otherwise panic will occur
+	h.mEmbeddedStaticFSMap[pattern] = fs
+}
+
 func (h *HTTPServer) New() iface.ICapability {
 	return &HTTPServer{}
 }
@@ -159,6 +167,7 @@ func (h *HTTPServer) AddHandler(pattern string, handler http.Handler) {
 func (h *HTTPServer) Setup() error {
 	h.mHttpServer = new(http.Server)
 	h.mHttpServerMux = new(http.ServeMux)
+	h.mEmbeddedStaticFSMap = make(map[string]embed.FS)
 
 	// setup server details
 	h.mHttpServer.Handler = h.mHttpServerMux
@@ -181,7 +190,7 @@ func (h *HTTPServer) Setup() error {
 		})
 	}
 
-	// register static path
+	// register data path
 	if len(h.mStaticDir) != 0 {
 		fi, e := os.Stat(h.mStaticDir)
 
@@ -189,7 +198,7 @@ func (h *HTTPServer) Setup() error {
 			logger.L(h.ContractId()).Error(e.Error())
 		} else {
 			if fi.IsDir() {
-				logger.L(h.ContractId()).Debug("static path", zap.String("static_path", h.mStaticPath))
+				logger.L(h.ContractId()).Debug("data path", zap.String("static_path", h.mStaticPath))
 				h.mHttpServerMux.Handle(h.mStaticPath, http.StripPrefix(h.mStaticPath, http.FileServer(http.Dir(h.mStaticDir))))
 			} else {
 				logger.L(h.ContractId()).Error("provided static_dir in the manifest conf is not directory")
@@ -213,6 +222,11 @@ func (h *HTTPServer) Setup() error {
 }
 
 func (h *HTTPServer) Start(_ context.Context) error {
+	logger.L(h.ContractId()).Debug("registering embedded data fs")
+	for p, d := range h.mEmbeddedStaticFSMap {
+		h.mHttpServerMux.Handle(p, http.FileServer(http.FS(d)))
+	}
+
 	logger.L(h.ContractId()).Info("http server started at " + h.mHttpServer.Addr)
 
 	if len(h.mCertFile) != 0 && len(h.mKeyFile) != 0 {
