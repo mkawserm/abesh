@@ -100,7 +100,7 @@ func (h *HTTPServer) SetConfigMap(values model.ConfigMap) error {
 	h.mKeyFile = values.String("key_file", "")
 
 	h.mStaticDir = values.String("static_dir", "")
-	h.mStaticPath = values.String("static_path", "/data/")
+	h.mStaticPath = values.String("static_path", "/static/")
 	h.mHealthPath = values.String("health_path", "")
 
 	h.mRequestTimeout = h.mValues.Duration("default_request_timeout", time.Second)
