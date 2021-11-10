@@ -3,7 +3,7 @@ version: "1"
 capabilities:
   - contract_id: "abesh:pprof"
   - contract_id: "abesh:httpclient"
-
+  - contract_id: "abesh:health"
   - contract_id: "abesh:httpserver"
     values:
       host: "0.0.0.0"
@@ -82,6 +82,12 @@ triggers:
       method: "GET"
       path: "/panic"
     service: "abesh:ex_panic"
+
+  - trigger: "abesh:httpserver"
+    trigger_values:
+      method: "GET"
+      path: "/health"
+    service: "abesh:health"
 
 rpcs:
   - rpc: "abesh:ex_rpc"

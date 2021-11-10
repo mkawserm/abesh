@@ -6,6 +6,7 @@ import (
 import _ "github.com/mkawserm/abesh/capability/httpserver"
 import _ "github.com/mkawserm/abesh/capability/httpclient"
 import _ "github.com/mkawserm/abesh/capability/pprof"
+import _ "github.com/mkawserm/abesh/capability/health"
 import _ "github.com/mkawserm/abesh/example/echo"
 import _ "github.com/mkawserm/abesh/example/authorizer"
 import _ "github.com/mkawserm/abesh/example/consumer"
