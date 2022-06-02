@@ -1,14 +1,14 @@
 module github.com/mkawserm/abesh
 
-go 1.17
+go 1.18
 
 require (
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/golang/protobuf v1.5.2
-	github.com/spf13/cobra v1.2.1
-	go.uber.org/zap v1.19.1
+	github.com/spf13/cobra v1.4.0
+	go.uber.org/zap v1.21.0
 	golang.org/x/text v0.3.5
-	google.golang.org/protobuf v1.27.1
+	google.golang.org/protobuf v1.28.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
