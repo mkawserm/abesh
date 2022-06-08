@@ -10,14 +10,25 @@ func MergeManifest(to, from *model.Manifest) *model.Manifest {
 		return to
 	}
 
-	fromCapabilities := make(map[string]*model.CapabilityManifest)
-
+	var fromCapabilities = make(map[string]*model.CapabilityManifest)
 	for _, capabilityManifest := range from.Capabilities {
-		fromCapabilities[capabilityManifest.ContractId] = capabilityManifest
+		if len(capabilityManifest.NewContractId) == 0 {
+			fromCapabilities[capabilityManifest.ContractId] = capabilityManifest
+		} else {
+			fromCapabilities[capabilityManifest.NewContractId] = capabilityManifest
+		}
 	}
 
 	for _, capabilityManifest := range to.Capabilities {
-		fromCapability, found := fromCapabilities[capabilityManifest.ContractId]
+		var fromCapability *model.CapabilityManifest
+		var found bool
+
+		if len(capabilityManifest.NewContractId) == 0 {
+			fromCapability, found = fromCapabilities[capabilityManifest.ContractId]
+		} else {
+			fromCapability, found = fromCapabilities[capabilityManifest.NewContractId]
+		}
+
 		if found {
 			for k, v := range fromCapability.Values {
 				if capabilityManifest.Values == nil {
