@@ -12,7 +12,7 @@ change-version:
 update-module:
 	go get -v github.com/spf13/cobra
 	go get -v go.uber.org/zap
-	go get -v github.com/caarlos0/env
+	go get -v github.com/caarlos0/env/v6
 	go get -v gopkg.in/yaml.v2
 	go get -v google.golang.org/protobuf/proto
 
